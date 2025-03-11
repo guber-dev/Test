@@ -1,6 +1,21 @@
-.DS_Store
-node_modules/
+# IDE files
 .vscode/
+.idea/
+
+# Dependencies
+node_modules/
+
+# Build files
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
 .npm/
 .Trash/
 Library/

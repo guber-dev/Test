@@ -6,8 +6,10 @@ html, body {
 }
 
 body {
-    background: url(./images/BG.png) no-repeat center center/cover fixed bisque;
+    background: url(./images/BG.png) no-repeat center center/cover fixed #1F1F1F;
     min-height: 100vh;
+    background-blend-mode: multiply;
+
 }
 
 .test_button {
@@ -28,3 +30,8 @@ body {
 
 .test_button:hover {
     background-color: #f0f0f0;
+}
+
+.test_button:active {
+    background-color: #d0d0d0;
+}
