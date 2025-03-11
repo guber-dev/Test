@@ -1,3 +1,30 @@
-body {
-    background-color: bisque;
+html, body {
+    margin: 0;
+    padding: 0; 
+    height: 100%;
+    overflow: hidden;
 }
+
+body {
+    background: url(./images/BG.png) no-repeat center center/cover fixed bisque;
+    min-height: 100vh;
+}
+
+.test_button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    color: #000;
+    transition: background-color 0.3s ease;
+}
+
+.test_button:hover {
+    background-color: #f0f0f0;
