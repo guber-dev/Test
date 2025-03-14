@@ -35,3 +35,39 @@ body {
 .test_button:active {
     background-color: #d0d0d0;
 }
+
+/* Стили для DJ-падов */
+.pads-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 10px;
+    width: 90%;
+    max-width: 500px;
+    height: 70vh;
+    margin: 50px auto;
+}
+
+.pad {
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: all 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pad:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Медиа-запрос для мобильных устройств */
+@media (max-width: 768px) {
+    .pads-container {
+        width: 95%;
+        height: 60vh;
+        gap: 8px;
+    }
+}
