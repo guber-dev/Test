@@ -5,17 +5,232 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Melodix DJ Pads</title>
     <link rel="stylesheet" href="main.css">
+    <!-- Сначала загружаем Telegram WebApp API -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-<script>
-    let tg = window.Telegram.WebApp;
-    tg.expand(); // Разворачивает мини-приложение на весь экран
-    console.log("User data:", tg.initDataUnsafe);
-</script>
 <body>
+    <!-- Переключатель режима отладки -->
+    <div id="debug-mode-toggle" style="position: fixed; top: 10px; left: 10px; z-index: 1001; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; color: white; font-family: sans-serif; font-size: 12px;">
+        <label>
+            <input type="checkbox" id="use-mock-tg" onchange="toggleDebugMode()"> Использовать эмуляцию Telegram
+        </label>
+    </div>
+
+    <script>
+        // Функция для эмуляции объекта Telegram WebApp
+        function createMockTelegramWebApp() {
+            console.log("Создание эмуляции Telegram WebApp");
+            
+            window.Telegram = {
+                WebApp: {
+                    initData: "mock_init_data",
+                    initDataUnsafe: {
+                        user: {
+                            id: 12345678,
+                            first_name: "Test",
+                            last_name: "User",
+                            username: "testuser",
+                            language_code: "ru"
+                        },
+                        auth_date: Date.now() / 1000 | 0,
+                        hash: "mock_hash"
+                    },
+                    platform: "mock_platform",
+                    colorScheme: "light",
+                    themeParams: {
+                        bg_color: "#ffffff",
+                        text_color: "#000000",
+                        hint_color: "#999999",
+                        link_color: "#2481cc",
+                        button_color: "#2481cc",
+                        button_text_color: "#ffffff"
+                    },
+                    isExpanded: false,
+                    viewportHeight: window.innerHeight,
+                    viewportStableHeight: window.innerHeight,
+                    
+                    expand: function() {
+                        console.log("Mock: expand вызван");
+                        this.isExpanded = true;
+                        return Promise.resolve();
+                    },
+                    
+                    close: function() {
+                        console.log("Mock: close вызван");
+                    },
+                    
+                    setHeaderColor: function(color) {
+                        console.log("Mock: setHeaderColor вызван с цветом", color);
+                    },
+                    
+                    setBackgroundColor: function(color) {
+                        console.log("Mock: setBackgroundColor вызван с цветом", color);
+                        document.body.style.backgroundColor = color;
+                    },
+                    
+                    enableClosingConfirmation: function() {
+                        console.log("Mock: enableClosingConfirmation вызван");
+                    },
+                    
+                    disableClosingConfirmation: function() {
+                        console.log("Mock: disableClosingConfirmation вызван");
+                    },
+                    
+                    onEvent: function(eventType, callback) {
+                        console.log("Mock: onEvent зарегистрирован для", eventType);
+                    },
+                    
+                    offEvent: function(eventType, callback) {
+                        console.log("Mock: offEvent вызван для", eventType);
+                    },
+                    
+                    sendData: function(data) {
+                        console.log("Mock: sendData вызван с данными", data);
+                    },
+                    
+                    openLink: function(url) {
+                        console.log("Mock: openLink вызван с URL", url);
+                        window.open(url, '_blank');
+                    },
+                    
+                    showPopup: function(params, callback) {
+                        console.log("Mock: showPopup вызван с параметрами", params);
+                        if (callback) setTimeout(() => callback(), 1000);
+                    },
+                    
+                    showAlert: function(message, callback) {
+                        console.log("Mock: showAlert вызван с сообщением", message);
+                        alert(message);
+                        if (callback) setTimeout(() => callback(), 1000);
+                    },
+                    
+                    showConfirm: function(message, callback) {
+                        console.log("Mock: showConfirm вызван с сообщением", message);
+                        const result = confirm(message);
+                        if (callback) setTimeout(() => callback(result), 1000);
+                    },
+                    
+                    ready: function() {
+                        console.log("Mock: ready вызван");
+                    },
+                    
+                    MainButton: {
+                        text: "ПРОДОЛЖИТЬ",
+                        color: "#2481cc",
+                        textColor: "#ffffff",
+                        isVisible: false,
+                        isActive: true,
+                        isProgressVisible: false,
+                        
+                        setText: function(text) {
+                            console.log("Mock MainButton: setText вызван с текстом", text);
+                            this.text = text;
+                        },
+                        
+                        show: function() {
+                            console.log("Mock MainButton: show вызван");
+                            this.isVisible = true;
+                        },
+                        
+                        hide: function() {
+                            console.log("Mock MainButton: hide вызван");
+                            this.isVisible = false;
+                        },
+                        
+                        enable: function() {
+                            console.log("Mock MainButton: enable вызван");
+                            this.isActive = true;
+                        },
+                        
+                        disable: function() {
+                            console.log("Mock MainButton: disable вызван");
+                            this.isActive = false;
+                        },
+                        
+                        showProgress: function(leaveActive) {
+                            console.log("Mock MainButton: showProgress вызван с leaveActive", leaveActive);
+                            this.isProgressVisible = true;
+                        },
+                        
+                        hideProgress: function() {
+                            console.log("Mock MainButton: hideProgress вызван");
+                            this.isProgressVisible = false;
+                        },
+                        
+                        onClick: function(callback) {
+                            console.log("Mock MainButton: onClick зарегистрирован");
+                        },
+                        
+                        offClick: function(callback) {
+                            console.log("Mock MainButton: offClick вызван");
+                        }
+                    }
+                }
+            };
+            
+            return window.Telegram.WebApp;
+        }
+        
+        // Сохраняем оригинальный объект Telegram, если он существует
+        let originalTelegram = window.Telegram;
+        
+        // Функция для переключения между реальным и эмулированным Telegram WebApp
+        function toggleDebugMode() {
+            const useMock = document.getElementById('use-mock-tg').checked;
+            
+            if (useMock) {
+                // Сохраняем оригинальный объект, если он еще не сохранен
+                if (!originalTelegram && window.Telegram) {
+                    originalTelegram = window.Telegram;
+                }
+                
+                // Создаем эмуляцию
+                const mockTg = createMockTelegramWebApp();
+                console.log("Режим эмуляции Telegram включен");
+                
+                // Перезагружаем страницу для применения изменений
+                localStorage.setItem('use_mock_tg', 'true');
+                location.reload();
+            } else {
+                // Восстанавливаем оригинальный объект, если он был сохранен
+                if (originalTelegram) {
+                    window.Telegram = originalTelegram;
+                    console.log("Восстановлен оригинальный объект Telegram");
+                }
+                
+                localStorage.setItem('use_mock_tg', 'false');
+                location.reload();
+            }
+        }
+        
+        // При загрузке страницы проверяем, нужно ли использовать эмуляцию
+        document.addEventListener('DOMContentLoaded', function() {
+            const useMock = localStorage.getItem('use_mock_tg') === 'true';
+            document.getElementById('use-mock-tg').checked = useMock;
+            
+            if (useMock) {
+                createMockTelegramWebApp();
+                console.log("Используется эмуляция Telegram WebApp");
+            } else if (window.Telegram && window.Telegram.WebApp) {
+                console.log("Используется реальный Telegram WebApp");
+                console.log("User data:", window.Telegram.WebApp.initDataUnsafe);
+            } else {
+                console.warn("Telegram WebApp не обнаружен, автоматически включена эмуляция");
+                createMockTelegramWebApp();
+                document.getElementById('use-mock-tg').checked = true;
+                localStorage.setItem('use_mock_tg', 'true');
+            }
+            
+            // Скрываем переключатель в реальном Telegram
+            if (!useMock && window.Telegram && window.Telegram.WebApp && !window.Telegram.WebApp.initDataUnsafe.user.id.toString().startsWith('12345')) {
+                document.getElementById('debug-mode-toggle').style.display = 'none';
+            }
+        });
+    </script>
+    
     <!-- DJ-пады будут добавлены через JavaScript -->
     
-    <!-- Подключение скрипта -->
-    <script src="app.js" type="module"></script>
+    <!-- Подключение скрипта (теперь без type="module") -->
+    <script src="app.js"></script>
 </body>
 </html>
