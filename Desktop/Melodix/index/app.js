@@ -7,17 +7,25 @@ let score = 0;
 // Настройка цветов и темы для Telegram Mini App
 function setupTelegramColors() {
   try {
-    // Устанавливаем цвет верхней панели
-    tg.setHeaderColor('#1F1F1F');
+    // Устанавливаем цвет верхней панели (используем правильный формат)
+    if (tg.setHeaderColor) {
+      tg.setHeaderColor('bg_color');
+    }
     
     // Устанавливаем цвет нижней панели
-    tg.setBackgroundColor('#1F1F1F');
+    if (tg.setBackgroundColor) {
+      tg.setBackgroundColor('#1F1F1F');
+    }
     
     // Запрашиваем тему
-    tg.requestTheme();
+    if (tg.requestTheme) {
+      tg.requestTheme();
+    }
     
     // Запрашиваем viewport
-    tg.requestViewport();
+    if (tg.requestViewport) {
+      tg.requestViewport();
+    }
     
     console.log('Настройки Telegram успешно применены');
   } catch (error) {
@@ -93,6 +101,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Функция для создания DJ-падов
 function createDJPads() {
+  // Проверяем наличие контейнера .app-container
+  let appContainer = document.querySelector('.app-container');
+  if (!appContainer) {
+    console.log('Контейнер .app-container не найден, создаем новый');
+    appContainer = document.createElement('div');
+    appContainer.className = 'app-container';
+    document.body.appendChild(appContainer);
+  }
+
   // Звуки для падов
   const sounds = [
     './sounds/01-fatality-start.mp3', 
