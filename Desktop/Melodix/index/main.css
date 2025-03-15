@@ -1,40 +1,142 @@
-html, body {
+/* Основные стили */
+* {
     margin: 0;
-    padding: 0; 
-    height: 100%;
-    overflow: hidden;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
 }
 
-body {
+html, body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #1F1F1F;
+    color: #FFFFFF;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: fixed;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+
+/* Контейнер приложения */
+.app-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     background: url(./images/BG.png) no-repeat center center/cover fixed #1F1F1F;
-    min-height: 100vh;
     background-blend-mode: multiply;
-    font-family: 'Inter', 'Roboto', sans-serif;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Счетчик MLDX */
+.mldx-counter {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 10;
+}
+
+.mldx-counter .value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #FFD700;
+}
+
+.mldx-counter .label {
+    font-size: 12px;
     color: #FFFFFF;
 }
 
-.test_button {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
+/* Контейнер для падов */
+.pads-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 500px;
+    margin: 60px auto 20px;
+}
+
+/* Стили для падов */
+.pad {
+    position: relative;
+    aspect-ratio: 1/1;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    color: #000;
-    transition: background-color 0.3s ease;
+    overflow: hidden;
+    transition: transform 0.1s ease-out, background-color 0.1s ease-out;
+    will-change: transform, background-color;
 }
 
-.test_button:hover {
-    background-color: #f0f0f0;
+.pad::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #FF6B6B, #4ECDC4);
+    opacity: 0.7;
+    z-index: -1;
+    transition: opacity 0.2s ease;
 }
 
-.test_button:active {
-    background-color: #d0d0d0;
+.pad.active {
+    transform: scale(0.95);
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.pad.active::before {
+    opacity: 1;
+}
+
+.pad-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: white;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+/* Анимации для падов */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+}
+
+.pad:active {
+    animation: pulse 0.3s ease-in-out;
 }
 
 /* Стили для DJ-падов */
@@ -107,28 +209,6 @@ body {
     transform: scale(0.98); /* Уменьшаем эффект масштабирования */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     background: radial-gradient(circle, #E42929 25%, #FF3D00 50%, #FF0000 65%);
-}
-
-/* Счетчик MLDX */
-.mldx-counter {
-    text-align: center;
-    position: absolute;
-    top: 12vh; /* Используем vh вместо px для лучшей адаптивности */
-    left: 0;
-    right: 0;
-    z-index: 10;
-}
-
-.mldx-counter .value {
-    font-size: 32px;
-    font-weight: bold;
-    line-height: 1;
-}
-
-.mldx-counter .label {
-    font-size: 14px;
-    color: #999;
-    margin-top: -2px;
 }
 
 /* Медиа-запрос для мобильных устройств */

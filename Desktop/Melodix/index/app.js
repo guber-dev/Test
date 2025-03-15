@@ -4,9 +4,9 @@ let tg = window.Telegram.WebApp;
 // Глобальная переменная для хранения счета
 let score = 0;
 
-// Глобальные переменные для работы с уроками
-let currentLesson = null;
-let lessonActive = false;
+// Глобальные переменные для работы с уроками - временно отключены
+// let currentLesson = null;
+// let lessonActive = false;
 
 // Настройка цветов и темы для Telegram Mini App
 function setupTelegramColors() {
@@ -76,14 +76,15 @@ function updateScore(points = 1) {
     scoreElement.textContent = score;
   }
   
-  // Обновляем также счетчик в профиле
-  const totalScoreElement = document.querySelector('.total-score');
-  if (totalScoreElement) {
-    totalScoreElement.textContent = score;
-  }
+  // Обновляем также счетчик в профиле - временно отключено
+  // const totalScoreElement = document.querySelector('.total-score');
+  // if (totalScoreElement) {
+  //   totalScoreElement.textContent = score;
+  // }
 }
 
-// Функция для переключения между разделами
+// Функция для переключения между разделами - временно отключена
+/*
 function switchSection(sectionId) {
   // Скрываем все разделы
   const sections = document.querySelectorAll('.section');
@@ -106,6 +107,7 @@ function switchSection(sectionId) {
     }
   });
 }
+*/
 
 // При загрузке документа
 document.addEventListener('DOMContentLoaded', () => {
@@ -125,27 +127,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Создание DJ-падов
     createDJPads();
     
-    // Создание списка уроков
-    createLessons();
-    
-    // Инициализация профиля
-    initProfile();
-    
-    // Настройка обработчиков для меню
-    setupMenuHandlers();
+    // Временно отключаем создание уроков и профиля
+    // createLessons();
+    // initProfile();
+    // setupMenuHandlers();
     
   } catch (error) {
     console.error('Ошибка при инициализации:', error.message);
     // Продолжаем инициализацию даже при ошибке с Telegram API
     preventAccidentalClose();
     createDJPads();
-    createLessons();
-    initProfile();
-    setupMenuHandlers();
+    // createLessons();
+    // initProfile();
+    // setupMenuHandlers();
   }
 });
 
-// Настройка обработчиков для меню
+// Настройка обработчиков для меню - временно отключена
+/*
 function setupMenuHandlers() {
   const menuItems = document.querySelectorAll('.menu-item');
   menuItems.forEach(item => {
@@ -155,6 +154,7 @@ function setupMenuHandlers() {
     });
   });
 }
+*/
 
 // Функция для создания DJ-падов
 function createDJPads() {
@@ -167,12 +167,12 @@ function createDJPads() {
     document.body.appendChild(appContainer);
   }
   
-  // Получаем раздел с пэдами
-  const padsSection = document.getElementById('pads-section');
-  if (!padsSection) {
-    console.error('Раздел pads-section не найден');
-    return;
-  }
+  // Получаем раздел с пэдами - временно используем app-container напрямую
+  // const padsSection = document.getElementById('pads-section');
+  // if (!padsSection) {
+  //   console.error('Раздел pads-section не найден');
+  //   return;
+  // }
 
   // Звуки для падов (выбираем 12 наиболее важных для барабанной установки)
   const sounds = [
@@ -205,12 +205,12 @@ function createDJPads() {
     <div class="value">${score}</div>
     <div class="label">$MLDX</div>
   `;
-  padsSection.appendChild(mldxCounter);
+  appContainer.appendChild(mldxCounter);
 
   // Создание контейнера для падов
   const padsContainer = document.createElement('div');
   padsContainer.className = 'pads-container';
-  padsSection.appendChild(padsContainer);
+  appContainer.appendChild(padsContainer);
 
   // Создание аудио контекста для более быстрого воспроизведения
   const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -291,12 +291,12 @@ function createDJPads() {
         pad.classList.add('active');
         playSound(i);
         
-        // Если урок активен, проверяем попадание в ритм
-        if (lessonActive && currentLesson) {
-          checkRhythmHit(i);
-        } else {
+        // Если урок активен, проверяем попадание в ритм - временно отключено
+        // if (lessonActive && currentLesson) {
+        //   checkRhythmHit(i);
+        // } else {
           updateScore();
-        }
+        // }
       }
     }, { passive: false });
     
@@ -321,12 +321,12 @@ function createDJPads() {
         pad.classList.add('active');
         playSound(i);
         
-        // Если урок активен, проверяем попадание в ритм
-        if (lessonActive && currentLesson) {
-          checkRhythmHit(i);
-        } else {
+        // Если урок активен, проверяем попадание в ритм - временно отключено
+        // if (lessonActive && currentLesson) {
+        //   checkRhythmHit(i);
+        // } else {
           updateScore();
-        }
+        // }
       }
     });
     
@@ -349,6 +349,8 @@ function createDJPads() {
   preloadSounds();
 }
 
+// Функции для работы с уроками - временно закомментированы
+/*
 // Функция для создания списка уроков
 function createLessons() {
   const lessonsList = document.querySelector('.lessons-list');
@@ -644,3 +646,4 @@ function stopLesson() {
   lessonActive = false;
   currentLesson = null;
 }
+*/

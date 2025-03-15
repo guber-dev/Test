@@ -2,54 +2,20 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, height=device-height">
-    <meta name="theme-color" content="#1F1F1F">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="format-detection" content="telephone=no">
-    <meta name="msapplication-tap-highlight" content="no">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="full-screen" content="yes">
-    <meta name="browsermode" content="application">
-    <title>Melodix DJ Pads</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="MobileOptimized" content="176">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Melodix DJ</title>
     <link rel="stylesheet" href="main.css">
-    <!-- Сначала загружаем Telegram WebApp API -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        /* Дополнительные стили для предотвращения скролла */
-        html, body {
-            overscroll-behavior: none; /* Предотвращает pull-to-refresh и overscroll */
-            touch-action: manipulation; /* Оптимизирует тач-события */
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-        
-        /* Контейнер для скролла внутри приложения */
-        .app-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            background: url(./images/BG.png) no-repeat center center/cover fixed #1F1F1F;
-            background-blend-mode: multiply;
-        }
-    </style>
 </head>
 <body>
-    <!-- Контейнер для скролла внутри приложения -->
     <div class="app-container">
-        <!-- Здесь будет контент приложения -->
+        <!-- Контент будет добавлен динамически через JavaScript -->
     </div>
-
-    <!-- Подключение скрипта -->
     <script src="app.js"></script>
 </body>
 </html>
