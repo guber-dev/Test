@@ -4,18 +4,15 @@ let tg = window.Telegram.WebApp;
 // Глобальная переменная для хранения счета
 let score = 0;
 
-// Глобальные переменные для работы с уроками - временно отключены
-// let currentLesson = null;
-// let lessonActive = false;
+// Глобальная переменная для режима ритма
+let rhythmMode = false;
 
 // Настройка цветов и темы для Telegram Mini App
 function setupTelegramColors() {
   try {
-    console.log('Инициализация Telegram WebApp...');
-    
-    // Устанавливаем цвет верхней панели
+    // Устанавливаем цвет верхней панели (используем правильный формат)
     if (tg.setHeaderColor) {
-      tg.setHeaderColor('#1F1F1F');
+      tg.setHeaderColor('bg_color');
     }
     
     // Устанавливаем цвет нижней панели
@@ -77,57 +74,38 @@ function updateScore(points = 1) {
   if (scoreElement) {
     scoreElement.textContent = score;
   }
-  
-  // Обновляем также счетчик в профиле - временно отключено
-  // const totalScoreElement = document.querySelector('.total-score');
-  // if (totalScoreElement) {
-  //   totalScoreElement.textContent = score;
-  // }
 }
 
-// Функция для переключения между разделами - временно отключена
-/*
-function switchSection(sectionId) {
-  // Скрываем все разделы
-  const sections = document.querySelectorAll('.section');
-  sections.forEach(section => {
-    section.classList.remove('active');
-  });
+// Функция для отображения результата попадания
+function showHitResult(result) {
+  // Создаем элемент для отображения результата
+  const hitResult = document.createElement('div');
+  hitResult.className = `hit-result ${result.type.toLowerCase()}`;
+  hitResult.textContent = result.type;
   
-  // Показываем выбранный раздел
-  const activeSection = document.getElementById(sectionId);
-  if (activeSection) {
-    activeSection.classList.add('active');
-  }
+  // Добавляем элемент на страницу
+  document.querySelector('.app-container').appendChild(hitResult);
   
-  // Обновляем активный пункт меню
-  const menuItems = document.querySelectorAll('.menu-item');
-  menuItems.forEach(item => {
-    item.classList.remove('active');
-    if (item.dataset.section === sectionId) {
-      item.classList.add('active');
-    }
-  });
+  // Удаляем элемент через некоторое время
+  setTimeout(() => {
+    hitResult.classList.add('fade-out');
+    setTimeout(() => {
+      hitResult.remove();
+    }, 500);
+  }, 500);
 }
-*/
 
 // При загрузке документа
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOM загружен, инициализация приложения...');
-  
   try {
     // Инициализация Telegram Mini App
     setupTelegramColors();
     
     // Раскрыть на полную высоту
-    if (tg.expand) {
-      tg.expand();
-    }
+    tg.expand();
     
     // Включаем подтверждение закрытия
-    if (tg.enableClosingConfirmation) {
-      tg.enableClosingConfirmation();
-    }
+    tg.enableClosingConfirmation();
     
     // Активируем блокировку случайного закрытия
     preventAccidentalClose();
@@ -135,40 +113,136 @@ document.addEventListener('DOMContentLoaded', () => {
     // Создание DJ-падов
     createDJPads();
     
-    // Временно отключаем создание уроков и профиля
-    // createLessons();
-    // initProfile();
-    // setupMenuHandlers();
+    // Создание интерфейса для режима ритма
+    createRhythmInterface();
     
-    console.log('Приложение успешно инициализировано');
   } catch (error) {
     console.error('Ошибка при инициализации:', error.message);
     // Продолжаем инициализацию даже при ошибке с Telegram API
     preventAccidentalClose();
     createDJPads();
-    // createLessons();
-    // initProfile();
-    // setupMenuHandlers();
+    createRhythmInterface();
   }
 });
 
-// Настройка обработчиков для меню - временно отключена
-/*
-function setupMenuHandlers() {
-  const menuItems = document.querySelectorAll('.menu-item');
-  menuItems.forEach(item => {
-    item.addEventListener('click', () => {
-      const sectionId = item.dataset.section;
-      switchSection(sectionId);
-    });
+// Функция для создания интерфейса режима ритма
+function createRhythmInterface() {
+  // Создаем контейнер для кнопок режима ритма
+  const rhythmControls = document.createElement('div');
+  rhythmControls.className = 'rhythm-controls';
+  
+  // Кнопка для переключения режима
+  const toggleButton = document.createElement('button');
+  toggleButton.className = 'rhythm-toggle';
+  toggleButton.textContent = 'Режим ритма';
+  toggleButton.addEventListener('click', toggleRhythmMode);
+  
+  // Контейнер для выбора паттерна
+  const patternSelector = document.createElement('div');
+  patternSelector.className = 'pattern-selector';
+  
+  // Создаем выпадающий список с паттернами
+  const patternSelect = document.createElement('select');
+  patternSelect.id = 'pattern-select';
+  
+  // Добавляем опции для каждого паттерна
+  const patterns = Object.keys(window.rhythmManager.patterns);
+  patterns.forEach(pattern => {
+    const option = document.createElement('option');
+    option.value = pattern;
+    option.textContent = pattern.charAt(0).toUpperCase() + pattern.slice(1);
+    patternSelect.appendChild(option);
   });
+  
+  // Кнопка для запуска паттерна
+  const startButton = document.createElement('button');
+  startButton.className = 'rhythm-start';
+  startButton.textContent = 'Старт';
+  startButton.disabled = true;
+  startButton.addEventListener('click', startRhythmPattern);
+  
+  // Добавляем элементы в контейнеры
+  patternSelector.appendChild(patternSelect);
+  rhythmControls.appendChild(toggleButton);
+  rhythmControls.appendChild(patternSelector);
+  rhythmControls.appendChild(startButton);
+  
+  // Добавляем контейнер на страницу
+  document.querySelector('.app-container').appendChild(rhythmControls);
+  
+  // Добавляем слушателя событий для менеджера ритма
+  window.rhythmManager.addListener(handleRhythmEvent);
 }
-*/
+
+// Функция для переключения режима ритма
+function toggleRhythmMode() {
+  rhythmMode = !rhythmMode;
+  
+  // Обновляем UI
+  const toggleButton = document.querySelector('.rhythm-toggle');
+  const startButton = document.querySelector('.rhythm-start');
+  const patternSelector = document.querySelector('.pattern-selector');
+  
+  if (rhythmMode) {
+    toggleButton.classList.add('active');
+    toggleButton.textContent = 'Режим свободной игры';
+    startButton.disabled = false;
+    patternSelector.style.display = 'block';
+  } else {
+    toggleButton.classList.remove('active');
+    toggleButton.textContent = 'Режим ритма';
+    startButton.disabled = true;
+    patternSelector.style.display = 'none';
+    
+    // Останавливаем текущий паттерн, если он воспроизводится
+    window.rhythmManager.stop();
+  }
+}
+
+// Функция для запуска ритмического паттерна
+function startRhythmPattern() {
+  if (!rhythmMode) return;
+  
+  // Получаем выбранный паттерн
+  const patternSelect = document.getElementById('pattern-select');
+  const selectedPattern = patternSelect.value;
+  
+  // Устанавливаем и запускаем паттерн
+  if (window.rhythmManager.setPattern(selectedPattern)) {
+    window.rhythmManager.start();
+    
+    // Обновляем UI
+    const startButton = document.querySelector('.rhythm-start');
+    startButton.textContent = 'Играет...';
+    startButton.disabled = true;
+    
+    // Сбрасываем счет
+    score = 0;
+    updateScore(0);
+  }
+}
+
+// Обработчик событий ритма
+function handleRhythmEvent(event) {
+  if (event.type === 'beat') {
+    // Подсвечиваем соответствующий пад
+    const pad = document.querySelector(`.pad[data-index="${event.beat.pad}"]`);
+    if (pad) {
+      pad.classList.add('highlight');
+      setTimeout(() => {
+        pad.classList.remove('highlight');
+      }, 200);
+    }
+  } else if (event.type === 'end') {
+    // Обновляем UI после окончания паттерна
+    const startButton = document.querySelector('.rhythm-start');
+    startButton.textContent = 'Старт';
+    startButton.disabled = false;
+  }
+}
 
 // Функция для создания DJ-падов
 function createDJPads() {
-  console.log('Создание DJ-падов...');
-  
   // Проверяем наличие контейнера .app-container
   let appContainer = document.querySelector('.app-container');
   if (!appContainer) {
@@ -177,36 +251,29 @@ function createDJPads() {
     appContainer.className = 'app-container';
     document.body.appendChild(appContainer);
   }
-  
-  // Получаем раздел с пэдами - временно используем app-container напрямую
-  // const padsSection = document.getElementById('pads-section');
-  // if (!padsSection) {
-  //   console.error('Раздел pads-section не найден');
-  //   return;
-  // }
 
-  // Звуки для падов (выбираем 12 наиболее важных для барабанной установки)
+  // Звуки для падов
   const sounds = [
-    './sounds/Kick.mp3',
-    './sounds/Snare01.mp3',
-    './sounds/Snare02.mp3',
-    './sounds/Hat_Closed.mp3',
     './sounds/Hat_Open.mp3',
     './sounds/Hat.mp3',
+    './sounds/Snare01.mp3',
     './sounds/Crash01.mp3',
     './sounds/Crash_02.mp3',
     './sounds/Ride01.mp3',
+    './sounds/Ride02.mp3',
     './sounds/TomF.mp3',
-    './sounds/TomM.mp3',
-    './sounds/TomL.mp3'
+    './sounds/Kick.mp3',
+    './sounds/TomL.mp3',
+    './sounds/Rim.mp3',
+    './sounds/Shake.mp3'
   ];
 
   // Названия инструментов для падов
   const padLabels = [
-    'Kick', 'Snare 1', 'Snare 2',
-    'Hi-Hat Closed', 'Hi-Hat Open', 'Hi-Hat',
-    'Crash 1', 'Crash 2', 'Ride',
-    'Tom High', 'Tom Mid', 'Tom Low'
+    'Open Hat', 'Hat', 'Snare',
+    'Crash 1', 'Crash 2', 'Ride 1',
+    'Ride 2', 'Tom F', 'Kick',
+    'Tom L', 'Rim', 'Shake'
   ];
 
   // Создание счетчика MLDX
@@ -216,31 +283,21 @@ function createDJPads() {
     <div class="value">${score}</div>
     <div class="label">$MLDX</div>
   `;
-  appContainer.appendChild(mldxCounter);
+  document.querySelector('.app-container').appendChild(mldxCounter);
 
   // Создание контейнера для падов
   const padsContainer = document.createElement('div');
   padsContainer.className = 'pads-container';
-  appContainer.appendChild(padsContainer);
-  
-  console.log('Контейнер для падов создан');
+  document.querySelector('.app-container').appendChild(padsContainer);
 
   // Создание аудио контекста для более быстрого воспроизведения
-  let audioContext;
-  try {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  } catch (error) {
-    console.error('Ошибка при создании аудио контекста:', error);
-    // Продолжаем без аудио контекста
-  }
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
   
   // Кэш для аудио буферов
   const audioBuffers = {};
   
   // Загрузка звуков
   const loadSound = async (url) => {
-    if (!audioContext) return null;
-    
     try {
       const response = await fetch(url);
       const arrayBuffer = await response.arrayBuffer();
@@ -254,13 +311,13 @@ function createDJPads() {
   // Функция для воспроизведения звука
   const playSound = (index) => {
     try {
-      if (audioContext && audioBuffers[index]) {
+      if (audioBuffers[index]) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[index];
         source.connect(audioContext.destination);
         source.start(0);
       } else {
-        // Резервный вариант, если буфер еще не загружен или нет аудио контекста
+        // Резервный вариант, если буфер еще не загружен
         const audio = new Audio(sounds[index]);
         audio.play().catch(err => console.error('Ошибка воспроизведения звука:', err));
       }
@@ -274,8 +331,6 @@ function createDJPads() {
   
   // Предзагрузка всех звуков
   const preloadSounds = async () => {
-    if (!audioContext) return;
-    
     try {
       for (let i = 0; i < sounds.length; i++) {
         try {
@@ -284,7 +339,6 @@ function createDJPads() {
           console.error(`Ошибка загрузки звука ${i}:`, error);
         }
       }
-      console.log('Звуки предзагружены');
     } catch (error) {
       console.error('Ошибка при предзагрузке звуков:', error);
     }
@@ -303,8 +357,6 @@ function createDJPads() {
     pad.appendChild(padLabel);
     padsContainer.appendChild(pad);
     
-    console.log(`Пад ${i} (${padLabels[i]}) создан`);
-    
     // Флаг для отслеживания активного состояния
     let isActive = false;
     
@@ -316,7 +368,19 @@ function createDJPads() {
         isActive = true;
         pad.classList.add('active');
         playSound(i);
-        updateScore();
+        
+        // Проверка попадания в ритм, если активен режим ритма
+        if (rhythmMode && window.rhythmManager.isPlaying) {
+          const result = window.rhythmManager.checkHit(i);
+          if (result.hit) {
+            updateScore(result.score);
+            showHitResult(result);
+          } else {
+            updateScore(0);
+          }
+        } else {
+          updateScore(1);
+        }
       }
     }, { passive: false });
     
@@ -340,7 +404,19 @@ function createDJPads() {
         isActive = true;
         pad.classList.add('active');
         playSound(i);
-        updateScore();
+        
+        // Проверка попадания в ритм, если активен режим ритма
+        if (rhythmMode && window.rhythmManager.isPlaying) {
+          const result = window.rhythmManager.checkHit(i);
+          if (result.hit) {
+            updateScore(result.score);
+            showHitResult(result);
+          } else {
+            updateScore(0);
+          }
+        } else {
+          updateScore(1);
+        }
       }
     });
     
@@ -359,307 +435,6 @@ function createDJPads() {
     });
   }
   
-  console.log('Все пады созданы, начинаем предзагрузку звуков');
-  
   // Предзагружаем звуки
   preloadSounds();
 }
-
-// Функции для работы с уроками - временно закомментированы
-/*
-// Функция для создания списка уроков
-function createLessons() {
-  const lessonsList = document.querySelector('.lessons-list');
-  if (!lessonsList) {
-    console.error('Контейнер для уроков не найден');
-    return;
-  }
-  
-  // Определяем 10 базовых барабанных рудиментов для уроков
-  const lessons = [
-    {
-      id: 'single-stroke-roll',
-      title: 'Single Stroke Roll',
-      description: 'Базовый рудимент - чередование ударов правой и левой рукой',
-      difficulty: 'Начальный',
-      pattern: [0, 1, 0, 1, 0, 1, 0, 1], // Индексы падов для последовательности
-      tempo: 80 // BPM
-    },
-    {
-      id: 'double-stroke-roll',
-      title: 'Double Stroke Roll',
-      description: 'По два удара каждой рукой поочередно',
-      difficulty: 'Начальный',
-      pattern: [0, 0, 1, 1, 0, 0, 1, 1],
-      tempo: 70
-    },
-    {
-      id: 'triple-stroke-roll',
-      title: 'Triple Stroke Roll',
-      description: 'По три удара каждой рукой поочередно',
-      difficulty: 'Средний',
-      pattern: [0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1],
-      tempo: 60
-    },
-    {
-      id: 'single-paradiddle',
-      title: 'Single Paradiddle',
-      description: 'Комбинация одиночных и двойных ударов (RLRR LRLL)',
-      difficulty: 'Средний',
-      pattern: [0, 1, 0, 0, 1, 0, 1, 1],
-      tempo: 70
-    },
-    {
-      id: 'double-paradiddle',
-      title: 'Double Paradiddle',
-      description: 'Расширенная версия парадидла (RLRLRR LRLRLL)',
-      difficulty: 'Средний',
-      pattern: [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1],
-      tempo: 65
-    },
-    {
-      id: 'five-stroke-roll',
-      title: 'Five Stroke Roll',
-      description: 'Пять ударов с акцентами',
-      difficulty: 'Средний',
-      pattern: [0, 0, 1, 1, 0, 1, 1, 0, 0, 1],
-      tempo: 60
-    },
-    {
-      id: 'flam',
-      title: 'Flam',
-      description: 'Основной форшлаг, когда один удар следует сразу за другим',
-      difficulty: 'Средний',
-      pattern: [0, 1, 0, 1, 0, 1, 0, 1],
-      tempo: 60
-    },
-    {
-      id: 'flam-tap',
-      title: 'Flam Tap',
-      description: 'Комбинация форшлага и одиночного удара',
-      difficulty: 'Продвинутый',
-      pattern: [0, 1, 0, 1, 0, 1, 0, 1],
-      tempo: 55
-    },
-    {
-      id: 'swiss-army-triplet',
-      title: 'Swiss Army Triplet',
-      description: 'Триольный рудимент с форшлагом',
-      difficulty: 'Продвинутый',
-      pattern: [0, 0, 1, 1, 1, 0, 0, 0, 1],
-      tempo: 50
-    },
-    {
-      id: 'six-stroke-roll',
-      title: 'Six Stroke Roll',
-      description: 'Шесть ударов с определенным рисунком акцентов',
-      difficulty: 'Продвинутый',
-      pattern: [0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0],
-      tempo: 55
-    }
-  ];
-  
-  // Создаем карточки для каждого урока
-  lessons.forEach(lesson => {
-    const lessonCard = document.createElement('div');
-    lessonCard.className = 'lesson-card';
-    lessonCard.dataset.id = lesson.id;
-    
-    lessonCard.innerHTML = `
-      <div class="lesson-title">${lesson.title}</div>
-      <div class="lesson-description">${lesson.description}</div>
-      <div class="lesson-difficulty">${lesson.difficulty}</div>
-    `;
-    
-    // Обработчик клика по уроку
-    lessonCard.addEventListener('click', () => {
-      startLesson(lesson);
-    });
-    
-    lessonsList.appendChild(lessonCard);
-  });
-}
-
-// Функция для инициализации профиля
-function initProfile() {
-  const profileSection = document.getElementById('profile-section');
-  if (!profileSection) {
-    console.error('Раздел профиля не найден');
-    return;
-  }
-  
-  // Получаем данные пользователя из Telegram
-  try {
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      const user = tg.initDataUnsafe.user;
-      
-      // Устанавливаем имя пользователя
-      const profileName = profileSection.querySelector('.profile-name');
-      if (profileName) {
-        profileName.textContent = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-      }
-      
-      // Устанавливаем аватар пользователя, если есть
-      const profileAvatar = profileSection.querySelector('.profile-avatar');
-      if (profileAvatar && user.photo_url) {
-        const img = document.createElement('img');
-        img.src = user.photo_url;
-        img.alt = 'Аватар';
-        profileAvatar.appendChild(img);
-      }
-    }
-  } catch (error) {
-    console.error('Ошибка при получении данных пользователя:', error);
-  }
-  
-  // Устанавливаем текущий счет
-  const totalScore = profileSection.querySelector('.total-score');
-  if (totalScore) {
-    totalScore.textContent = score;
-  }
-}
-
-// Функция для запуска урока
-function startLesson(lesson) {
-  // Переключаемся на раздел с пэдами
-  switchSection('pads-section');
-  
-  // Устанавливаем текущий урок
-  currentLesson = lesson;
-  lessonActive = true;
-  
-  // Показываем информацию об уроке
-  showLessonInfo(lesson);
-  
-  // Запускаем анимацию ритма
-  startRhythmAnimation(lesson);
-}
-
-// Функция для отображения информации об уроке
-function showLessonInfo(lesson) {
-  // Создаем элемент с информацией об уроке
-  const lessonInfo = document.createElement('div');
-  lessonInfo.className = 'lesson-info';
-  lessonInfo.innerHTML = `
-    <div class="lesson-info-title">${lesson.title}</div>
-    <div class="lesson-info-description">${lesson.description}</div>
-    <div class="lesson-info-tempo">Темп: ${lesson.tempo} BPM</div>
-    <button class="lesson-stop-btn">Завершить урок</button>
-  `;
-  
-  // Добавляем кнопку для завершения урока
-  const stopBtn = lessonInfo.querySelector('.lesson-stop-btn');
-  stopBtn.addEventListener('click', stopLesson);
-  
-  // Добавляем информацию на страницу
-  const padsSection = document.getElementById('pads-section');
-  padsSection.appendChild(lessonInfo);
-}
-
-// Функция для запуска анимации ритма
-function startRhythmAnimation(lesson) {
-  // Получаем все пэды
-  const pads = document.querySelectorAll('.pad');
-  
-  // Рассчитываем интервал между ударами в миллисекундах
-  const beatInterval = 60000 / lesson.tempo;
-  
-  // Индекс текущего удара в паттерне
-  let currentBeatIndex = 0;
-  
-  // Создаем интервал для анимации ритма
-  const rhythmInterval = setInterval(() => {
-    // Получаем индекс пада для текущего удара
-    const padIndex = lesson.pattern[currentBeatIndex];
-    
-    // Находим соответствующий пад
-    const pad = pads[padIndex];
-    
-    // Добавляем анимацию ритма
-    addRhythmIndicator(pad);
-    
-    // Увеличиваем индекс удара или сбрасываем его
-    currentBeatIndex = (currentBeatIndex + 1) % lesson.pattern.length;
-  }, beatInterval);
-  
-  // Сохраняем интервал в текущем уроке для возможности остановки
-  currentLesson.rhythmInterval = rhythmInterval;
-}
-
-// Функция для добавления индикатора ритма на пад
-function addRhythmIndicator(pad) {
-  // Создаем индикатор ритма
-  const rhythmIndicator = document.createElement('div');
-  rhythmIndicator.className = 'rhythm-indicator';
-  
-  // Создаем анимированный круг
-  const rhythmCircle = document.createElement('div');
-  rhythmCircle.className = 'rhythm-circle pulse';
-  
-  // Добавляем элементы на пад
-  rhythmIndicator.appendChild(rhythmCircle);
-  pad.appendChild(rhythmIndicator);
-  
-  // Удаляем индикатор через 1 секунду
-  setTimeout(() => {
-    pad.removeChild(rhythmIndicator);
-  }, 1000);
-}
-
-// Функция для проверки попадания в ритм
-function checkRhythmHit(padIndex) {
-  // Здесь будет логика проверки попадания в ритм
-  // Пока просто добавляем очки
-  updateScore(2);
-  
-  // Показываем обратную связь
-  showRhythmFeedback('perfect');
-}
-
-// Функция для отображения обратной связи о попадании в ритм
-function showRhythmFeedback(type) {
-  // Создаем элемент обратной связи
-  const feedback = document.createElement('div');
-  feedback.className = `rhythm-feedback ${type}`;
-  
-  // Устанавливаем текст в зависимости от типа
-  switch (type) {
-    case 'perfect':
-      feedback.textContent = 'Идеально!';
-      break;
-    case 'good':
-      feedback.textContent = 'Хорошо!';
-      break;
-    case 'miss':
-      feedback.textContent = 'Мимо!';
-      break;
-  }
-  
-  // Добавляем элемент на страницу
-  const padsSection = document.getElementById('pads-section');
-  padsSection.appendChild(feedback);
-  
-  // Удаляем элемент после анимации
-  setTimeout(() => {
-    padsSection.removeChild(feedback);
-  }, 500);
-}
-
-// Функция для завершения урока
-function stopLesson() {
-  // Останавливаем анимацию ритма
-  if (currentLesson && currentLesson.rhythmInterval) {
-    clearInterval(currentLesson.rhythmInterval);
-  }
-  
-  // Удаляем информацию об уроке
-  const lessonInfo = document.querySelector('.lesson-info');
-  if (lessonInfo) {
-    lessonInfo.remove();
-  }
-  
-  // Сбрасываем флаги
-  lessonActive = false;
-  currentLesson = null;
-}
-*/
