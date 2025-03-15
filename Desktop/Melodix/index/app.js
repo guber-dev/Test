@@ -91,19 +91,49 @@ document.addEventListener('DOMContentLoaded', () => {
 function createDJPads() {
   // Звуки для падов
   const sounds = [
-    '01-fatality-start.mp3', '02-ladder-select.mp3', '03-there-is-no-knowledge-that-is-not-power.mp3',
-    '05-versus.mp3', '10-fatality-announcer.mp3', '78-fight.mp3',
-    '79-round-one.mp3', 'ak47_boltpull.mp3', 'c4_beep1.mp3',
-    'uvazhaja.mp3', 'ak47_boltpull.mp3', 'c4_beep1.mp3'
+    './sounds/01-fatality-start.mp3', 
+    './sounds/02-ladder-select.mp3', 
+    './sounds/03-there-is-no-knowledge-that-is-not-power.mp3',
+    './sounds/05-versus.mp3', 
+    './sounds/10-fatality-announcer.mp3', 
+    './sounds/78-fight.mp3',
+    './sounds/79-round-one.mp3', 
+    './sounds/ak47_boltpull.mp3', 
+    './sounds/c4_beep1.mp3',
+    './sounds/uvazhaja.mp3', 
+    './sounds/ak47_boltpull.mp3', 
+    './sounds/c4_beep1.mp3'
   ];
 
-  // Цвета для падов
-  const colors = [
-    '#FF5252', '#FF4081', '#E040FB',
-    '#7C4DFF', '#536DFE', '#448AFF',
-    '#40C4FF', '#18FFFF', '#64FFDA',
-    '#69F0AE', '#B2FF59', '#EEFF41'
+  // Названия инструментов для падов
+  const padLabels = [
+    'Open Hat', 'Hat', 'Snare',
+    'VFX 01', 'VFX 02', 'VFX 03',
+    'Drop', 'Bass', 'Kick',
+    'Melody', 'Clap', 'Siren'
   ];
+
+  // Создание заголовка приложения
+  const appHeader = document.createElement('div');
+  appHeader.className = 'app-header';
+  appHeader.textContent = 'Melodix Drumpad';
+  document.body.appendChild(appHeader);
+
+  // Создание счетчика MLDX
+  const mldxCounter = document.createElement('div');
+  mldxCounter.className = 'mldx-counter';
+  
+  const counterValue = document.createElement('div');
+  counterValue.className = 'value';
+  counterValue.textContent = '100';
+  
+  const counterLabel = document.createElement('div');
+  counterLabel.className = 'label';
+  counterLabel.textContent = '$MLDX';
+  
+  mldxCounter.appendChild(counterValue);
+  mldxCounter.appendChild(counterLabel);
+  document.body.appendChild(mldxCounter);
 
   // Создание контейнера для падов
   const padsContainer = document.createElement('div');
@@ -114,11 +144,16 @@ function createDJPads() {
   for (let i = 0; i < 12; i++) {
     const pad = document.createElement('div');
     pad.className = 'pad';
-    pad.style.backgroundColor = colors[i];
+    
+    // Добавление названия инструмента
+    const padLabel = document.createElement('div');
+    padLabel.className = 'pad-label';
+    padLabel.textContent = padLabels[i];
+    pad.appendChild(padLabel);
     
     // Создание аудио элемента
     const audio = document.createElement('audio');
-    audio.src = `./sounds/${sounds[i]}`;
+    audio.src = sounds[i];
     pad.appendChild(audio);
 
     // Обработчик нажатия на пад
@@ -127,20 +162,25 @@ function createDJPads() {
       const sound = this.querySelector('audio');
       sound.currentTime = 0;
       sound.play()
-        .then(() => log(`Воспроизведение звука: ${sounds[i]}`))
-        .catch(err => log(`Ошибка воспроизведения звука ${sounds[i]}:`, err.message));
+        .then(() => log(`Воспроизведение звука: ${sounds[i]} (${padLabels[i]})`))
+        .catch(err => log(`Ошибка воспроизведения звука ${sounds[i]} (${padLabels[i]}):`, err.message));
 
       // Анимация нажатия (изменение цвета)
-      const originalColor = this.style.backgroundColor;
-      this.style.backgroundColor = '#FFFFFF';
+      this.classList.add('active');
       
       setTimeout(() => {
-        this.style.backgroundColor = originalColor;
+        this.classList.remove('active');
       }, 100);
     });
 
     padsContainer.appendChild(pad);
   }
+  
+  // Создание подвала приложения
+  const appFooter = document.createElement('div');
+  appFooter.className = 'app-footer';
+  appFooter.textContent = 'Melodix Drumpad';
+  document.body.appendChild(appFooter);
   
   log('DJ-пады созданы', { count: 12 });
 }

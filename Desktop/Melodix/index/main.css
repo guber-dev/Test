@@ -9,7 +9,8 @@ body {
     background: url(./images/BG.png) no-repeat center center/cover fixed #1F1F1F;
     min-height: 100vh;
     background-blend-mode: multiply;
-
+    font-family: 'Inter', 'Roboto', sans-serif;
+    color: #FFFFFF;
 }
 
 .test_button {
@@ -49,18 +50,70 @@ body {
 }
 
 .pad {
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    width: 128px;
+    height: 128px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #1F1F1F 0%, #141414 100%);
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
     cursor: pointer;
     transition: all 0.1s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    border: 1px solid;
+    border-image: linear-gradient(180deg, rgba(85, 85, 85, 0.25) 0%, rgba(46, 46, 46, 0.25) 100%) 1;
+}
+
+.pad-label {
+    color: #F2E205;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: center;
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    right: 0;
 }
 
 .pad:active {
     transform: scale(0.95);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(180deg, #2E2E2E 0%, #1F1F1F 100%);
+}
+
+/* Заголовок приложения */
+.app-header {
+    text-align: center;
+    padding: 20px 0;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.app-footer {
+    text-align: center;
+    padding: 20px 0;
+    font-size: 18px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+/* Счетчик MLDX */
+.mldx-counter {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.mldx-counter .value {
+    font-size: 36px;
+    font-weight: bold;
+}
+
+.mldx-counter .label {
+    font-size: 14px;
+    color: #999;
 }
 
 /* Медиа-запрос для мобильных устройств */
@@ -70,4 +123,80 @@ body {
         height: 60vh;
         gap: 8px;
     }
+    
+    .pad {
+        width: 100%;
+        height: 0;
+        padding-bottom: 100%; /* Делает высоту равной ширине */
+    }
+    
+    .pad-label {
+        font-size: 14px;
+        bottom: 10px;
+    }
+}
+
+/* Стили для отладочной панели */
+.debug-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    z-index: 1000;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 12px;
+    max-height: 40vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.debug-panel h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #4CAF50;
+}
+
+.log-container {
+    overflow-y: auto;
+    max-height: 30vh;
+    border-top: 1px solid #444;
+    padding-top: 5px;
+}
+
+.log-entry {
+    margin-bottom: 5px;
+    border-bottom: 1px dotted #333;
+    padding-bottom: 5px;
+}
+
+.log-entry pre {
+    margin: 5px 0 0 15px;
+    white-space: pre-wrap;
+    color: #8BC34A;
+    font-size: 11px;
+}
+
+.timestamp {
+    color: #2196F3;
+    margin-right: 5px;
+}
+
+.toggle-debug {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.toggle-debug:hover {
+    background-color: #45a049;
 }
