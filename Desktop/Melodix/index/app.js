@@ -1,64 +1,8 @@
-// Используем глобальный объект Telegram вместо импорта SDK
-// Инициализация приложения
+// Используем глобальный объект Telegram
 let tg = window.Telegram.WebApp;
 
-// Функция для создания панели отладки
-function createDebugPanel() {
-  const debugPanel = document.createElement('div');
-  debugPanel.className = 'debug-panel';
-  
-  // Заголовок панели
-  const header = document.createElement('h3');
-  header.textContent = 'Отладочная информация';
-  debugPanel.appendChild(header);
-  
-  // Контейнер для логов
-  const logContainer = document.createElement('div');
-  logContainer.className = 'log-container';
-  debugPanel.appendChild(logContainer);
-  
-  // Кнопка для скрытия/показа панели
-  const toggleButton = document.createElement('button');
-  toggleButton.textContent = 'Скрыть';
-  toggleButton.className = 'toggle-debug';
-  toggleButton.addEventListener('click', () => {
-    if (logContainer.style.display === 'none') {
-      logContainer.style.display = 'block';
-      toggleButton.textContent = 'Скрыть';
-    } else {
-      logContainer.style.display = 'none';
-      toggleButton.textContent = 'Показать';
-    }
-  });
-  debugPanel.appendChild(toggleButton);
-  
-  document.body.appendChild(debugPanel);
-  
-  return logContainer;
-}
-
-// Функция для добавления лога в панель отладки
-function log(message, data = null) {
-  const logContainer = document.querySelector('.log-container');
-  if (!logContainer) return;
-  
-  const logEntry = document.createElement('div');
-  logEntry.className = 'log-entry';
-  
-  const timestamp = new Date().toLocaleTimeString();
-  logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
-  
-  if (data) {
-    const dataEl = document.createElement('pre');
-    dataEl.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
-    logEntry.appendChild(dataEl);
-  }
-  
-  logContainer.appendChild(logEntry);
-  logContainer.scrollTop = logContainer.scrollHeight;
-  
-  console.log(`[DEBUG] ${message}`, data);
-}
+// Глобальная переменная для хранения счета
+let score = 0;
 
 // Блокировка случайного закрытия приложения при скролле вниз
 function preventAccidentalClose() {
@@ -89,28 +33,25 @@ function preventAccidentalClose() {
       }
     }
   }, { passive: false });
-  
-  log('Блокировка случайного закрытия активирована');
+}
+
+// Функция для обновления счетчика очков
+function updateScore() {
+  score += 1;
+  const scoreElement = document.querySelector('.mldx-counter .value');
+  if (scoreElement) {
+    scoreElement.textContent = score;
+  }
 }
 
 // При загрузке документа
 document.addEventListener('DOMContentLoaded', () => {
-  // Создаем панель отладки
-  const logContainer = createDebugPanel();
-  
-  // Логируем информацию о запуске
-  log('Telegram WebApp инициализирован');
-  
   try {
-    // Получаем данные инициализации
-    log('Данные инициализации:', tg.initData);
-    
-    // Получаем информацию о пользователе
-    log('Информация о пользователе:', tg.initDataUnsafe.user);
-    
     // Раскрыть на полную высоту
     tg.expand();
-    log('Приложение развернуто на полную высоту');
+    
+    // Включаем подтверждение закрытия
+    tg.enableClosingConfirmation();
     
     // Активируем блокировку случайного закрытия
     preventAccidentalClose();
@@ -119,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     createDJPads();
     
   } catch (error) {
-    log('Ошибка при инициализации:', error.message);
+    console.error('Ошибка при инициализации:', error.message);
   }
 });
 
@@ -161,7 +102,7 @@ function createDJPads() {
   
   const counterValue = document.createElement('div');
   counterValue.className = 'value';
-  counterValue.textContent = '100';
+  counterValue.textContent = score.toString(); // Начальное значение 0
   
   const counterLabel = document.createElement('div');
   counterLabel.className = 'label';
@@ -198,15 +139,17 @@ function createDJPads() {
       const sound = this.querySelector('audio');
       sound.currentTime = 0;
       sound.play()
-        .then(() => log(`Воспроизведение звука: ${sounds[i]} (${padLabels[i]})`))
-        .catch(err => log(`Ошибка воспроизведения звука ${sounds[i]} (${padLabels[i]}):`, err.message));
+        .catch(err => console.error(`Ошибка воспроизведения звука:`, err.message));
+
+      // Увеличиваем счет
+      updateScore();
 
       // Анимация нажатия (изменение цвета)
       this.classList.add('active');
       
       setTimeout(() => {
         this.classList.remove('active');
-      }, 300); // Увеличиваем время, чтобы эффект был более заметен
+      }, 300);
     });
 
     padsContainer.appendChild(pad);
@@ -217,6 +160,4 @@ function createDJPads() {
   appFooter.className = 'app-footer';
   appFooter.textContent = 'Melodix Drumpad';
   document.querySelector('.app-container').appendChild(appFooter);
-  
-  log('DJ-пады созданы', { count: 12 });
 }
