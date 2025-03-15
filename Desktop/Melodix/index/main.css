@@ -224,7 +224,7 @@ body {
 /* Стили для режима ритма */
 .rhythm-controls {
     position: fixed;
-    bottom: 20px;
+    bottom: 80px; /* Увеличиваем отступ снизу */
     left: 0;
     right: 0;
     display: flex;
@@ -337,4 +337,161 @@ body {
         transform: translate(-50%, -50%) scale(1.5);
         opacity: 0;
     }
+}
+
+/* Стили для нижнего меню */
+.bottom-menu {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: rgba(20, 20, 20, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.menu-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    text-decoration: none;
+    font-size: 12px;
+    padding: 5px 0;
+    width: 33.33%;
+    transition: all 0.2s ease;
+}
+
+.menu-item.active {
+    color: #FFFFFF;
+}
+
+.menu-icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+/* Обновляем стили для контейнера приложения, чтобы учесть нижнее меню */
+.app-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 60px; /* Оставляем место для нижнего меню */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: url(./images/BG.png) no-repeat center center/cover fixed #1F1F1F;
+    background-blend-mode: multiply;
+}
+
+/* Стили для контейнеров разделов */
+.section-container {
+    display: none;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.section-container.active {
+    display: block;
+}
+
+/* Стили для заголовков разделов */
+.section-header {
+    padding: 20px;
+    text-align: center;
+}
+
+.section-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* Стили для раздела "Уроки" */
+.lessons-list {
+    padding: 0 20px 20px;
+}
+
+.lesson-card {
+    background: linear-gradient(180deg, #2A2A2A 0%, #1A1A1A 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.lesson-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.lesson-description {
+    font-size: 14px;
+    color: #AAA;
+    margin-bottom: 15px;
+}
+
+.lesson-button {
+    background: linear-gradient(180deg, #E42929 0%, #B71C1C 100%);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* Стили для раздела "Профиль" */
+.profile-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+.profile-avatar {
+    font-size: 80px;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.profile-name {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 25px;
+}
+
+.profile-stats {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    max-width: 400px;
+    margin-top: 20px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #999;
 }

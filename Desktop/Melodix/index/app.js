@@ -7,6 +7,9 @@ let score = 0;
 // Глобальная переменная для режима ритма
 let rhythmMode = false;
 
+// Глобальная переменная для текущего активного раздела
+let currentSection = 'game-section';
+
 // Настройка цветов и темы для Telegram Mini App
 function setupTelegramColors() {
   try {
@@ -33,6 +36,33 @@ function setupTelegramColors() {
     console.log('Настройки Telegram успешно применены');
   } catch (error) {
     console.error('Ошибка при настройке Telegram:', error.message);
+  }
+}
+
+// Функция для переключения между разделами
+function switchSection(sectionId) {
+  // Скрываем все разделы
+  document.querySelectorAll('.section-container').forEach(section => {
+    section.classList.remove('active');
+  });
+  
+  // Показываем выбранный раздел
+  const targetSection = document.getElementById(sectionId);
+  if (targetSection) {
+    targetSection.classList.add('active');
+    currentSection = sectionId;
+  }
+  
+  // Обновляем активный элемент меню
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  
+  document.querySelector(`.menu-item[data-section="${sectionId}"]`).classList.add('active');
+  
+  // Если переключились на раздел игры, убедимся, что пады созданы
+  if (sectionId === 'game-section' && !document.querySelector('.pads-container')) {
+    createDJPads();
   }
 }
 
@@ -74,6 +104,12 @@ function updateScore(points = 1) {
   if (scoreElement) {
     scoreElement.textContent = score;
   }
+  
+  // Обновляем счет в профиле
+  const profileScoreElement = document.querySelector('.profile-stats .stat-item:first-child .stat-value');
+  if (profileScoreElement) {
+    profileScoreElement.textContent = score;
+  }
 }
 
 // Функция для отображения результата попадания
@@ -110,11 +146,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Активируем блокировку случайного закрытия
     preventAccidentalClose();
     
-    // Создание DJ-падов
+    // Создание DJ-падов в разделе игры
     createDJPads();
     
     // Создание интерфейса для режима ритма
     createRhythmInterface();
+    
+    // Инициализация обработчиков для меню
+    initMenuHandlers();
     
   } catch (error) {
     console.error('Ошибка при инициализации:', error.message);
@@ -122,8 +161,53 @@ document.addEventListener('DOMContentLoaded', () => {
     preventAccidentalClose();
     createDJPads();
     createRhythmInterface();
+    initMenuHandlers();
   }
 });
+
+// Инициализация обработчиков для меню
+function initMenuHandlers() {
+  // Добавляем обработчики для пунктов меню
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      const sectionId = this.getAttribute('data-section');
+      switchSection(sectionId);
+    });
+  });
+  
+  // Инициализация обработчиков для кнопок в уроках
+  document.querySelectorAll('.lesson-button').forEach(button => {
+    button.addEventListener('click', function() {
+      // Переключаемся на раздел игры при нажатии на кнопку урока
+      switchSection('game-section');
+      
+      // Активируем режим ритма
+      if (!rhythmMode) {
+        toggleRhythmMode();
+      }
+      
+      // Запускаем соответствующий паттерн
+      const lessonTitle = this.closest('.lesson-card').querySelector('.lesson-title').textContent;
+      let patternToStart = 'simple';
+      
+      if (lessonTitle.includes('Простые')) {
+        patternToStart = 'simple';
+      } else if (lessonTitle.includes('Продвинутые')) {
+        patternToStart = 'complex';
+      }
+      
+      // Выбираем паттерн в селекте
+      const patternSelect = document.getElementById('pattern-select');
+      if (patternSelect) {
+        patternSelect.value = patternToStart;
+      }
+      
+      // Запускаем паттерн
+      startRhythmPattern();
+    });
+  });
+}
 
 // Функция для создания интерфейса режима ритма
 function createRhythmInterface() {
@@ -168,7 +252,7 @@ function createRhythmInterface() {
   rhythmControls.appendChild(startButton);
   
   // Добавляем контейнер на страницу
-  document.querySelector('.app-container').appendChild(rhythmControls);
+  document.querySelector('#game-section').appendChild(rhythmControls);
   
   // Добавляем слушателя событий для менеджера ритма
   window.rhythmManager.addListener(handleRhythmEvent);
@@ -243,13 +327,19 @@ function handleRhythmEvent(event) {
 
 // Функция для создания DJ-падов
 function createDJPads() {
-  // Проверяем наличие контейнера .app-container
-  let appContainer = document.querySelector('.app-container');
-  if (!appContainer) {
-    console.log('Контейнер .app-container не найден, создаем новый');
-    appContainer = document.createElement('div');
-    appContainer.className = 'app-container';
-    document.body.appendChild(appContainer);
+  // Проверяем, существуют ли уже пады
+  if (document.querySelector('.pads-container')) {
+    return;
+  }
+  
+  // Проверяем наличие контейнера для игры
+  let gameSection = document.querySelector('#game-section');
+  if (!gameSection) {
+    console.log('Контейнер #game-section не найден, создаем новый');
+    gameSection = document.createElement('div');
+    gameSection.id = 'game-section';
+    gameSection.className = 'section-container active';
+    document.querySelector('.app-container').appendChild(gameSection);
   }
 
   // Звуки для падов
@@ -283,15 +373,28 @@ function createDJPads() {
     <div class="value">${score}</div>
     <div class="label">$MLDX</div>
   `;
-  document.querySelector('.app-container').appendChild(mldxCounter);
+  gameSection.appendChild(mldxCounter);
 
   // Создание контейнера для падов
   const padsContainer = document.createElement('div');
   padsContainer.className = 'pads-container';
-  document.querySelector('.app-container').appendChild(padsContainer);
+  gameSection.appendChild(padsContainer);
 
   // Создание аудио контекста для более быстрого воспроизведения
-  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  let audioContext;
+  
+  // Инициализация аудио контекста при первом взаимодействии пользователя
+  const initAudioContext = () => {
+    if (!audioContext) {
+      try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        console.log('Аудио контекст успешно инициализирован');
+      } catch (error) {
+        console.error('Ошибка при создании аудио контекста:', error);
+      }
+    }
+    return audioContext;
+  };
   
   // Кэш для аудио буферов
   const audioBuffers = {};
@@ -299,11 +402,19 @@ function createDJPads() {
   // Загрузка звуков
   const loadSound = async (url) => {
     try {
+      if (!audioContext) return null;
+      
+      console.log(`Загрузка звука: ${url}`);
       const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Ошибка HTTP: ${response.status} при загрузке ${url}`);
+      }
+      
       const arrayBuffer = await response.arrayBuffer();
+      console.log(`Звук загружен: ${url}, размер: ${arrayBuffer.byteLength} байт`);
       return await audioContext.decodeAudioData(arrayBuffer);
     } catch (error) {
-      console.error('Ошибка загрузки звука:', error);
+      console.error(`Ошибка загрузки звука ${url}:`, error);
       return null;
     }
   };
@@ -311,34 +422,69 @@ function createDJPads() {
   // Функция для воспроизведения звука
   const playSound = (index) => {
     try {
+      // Инициализируем аудио контекст при первом воспроизведении
+      if (!audioContext) {
+        initAudioContext();
+      }
+      
+      // Возобновляем аудио контекст, если он был приостановлен
+      if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+      
+      console.log(`Воспроизведение звука ${index}: ${sounds[index]}`);
+      
       if (audioBuffers[index]) {
+        console.log(`Используем буфер для звука ${index}`);
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[index];
         source.connect(audioContext.destination);
         source.start(0);
       } else {
         // Резервный вариант, если буфер еще не загружен
+        console.log(`Используем резервный Audio API для звука ${index}`);
         const audio = new Audio(sounds[index]);
-        audio.play().catch(err => console.error('Ошибка воспроизведения звука:', err));
+        audio.play()
+          .then(() => console.log(`Звук ${index} успешно воспроизведен через Audio API`))
+          .catch(err => console.error(`Ошибка воспроизведения звука ${index}:`, err));
       }
     } catch (error) {
       console.error('Ошибка при воспроизведении звука:', error);
       // Резервный вариант при ошибке Web Audio API
+      console.log(`Используем аварийный резервный вариант для звука ${index}`);
       const audio = new Audio(sounds[index]);
-      audio.play().catch(err => console.error('Ошибка резервного воспроизведения:', err));
+      audio.play()
+        .then(() => console.log(`Звук ${index} успешно воспроизведен через аварийный Audio API`))
+        .catch(err => console.error(`Ошибка аварийного воспроизведения звука ${index}:`, err));
     }
   };
   
   // Предзагрузка всех звуков
   const preloadSounds = async () => {
     try {
+      // Инициализируем аудио контекст
+      initAudioContext();
+      
+      if (!audioContext) {
+        console.warn('Аудио контекст не инициализирован, предзагрузка звуков невозможна');
+        return;
+      }
+      
+      console.log('Начинаем предзагрузку звуков...');
       for (let i = 0; i < sounds.length; i++) {
         try {
+          console.log(`Предзагрузка звука ${i}: ${sounds[i]}`);
           audioBuffers[i] = await loadSound(sounds[i]);
+          if (audioBuffers[i]) {
+            console.log(`Звук ${i} успешно предзагружен`);
+          } else {
+            console.warn(`Не удалось предзагрузить звук ${i}`);
+          }
         } catch (error) {
           console.error(`Ошибка загрузки звука ${i}:`, error);
         }
       }
+      console.log('Предзагрузка звуков завершена');
     } catch (error) {
       console.error('Ошибка при предзагрузке звуков:', error);
     }
@@ -367,6 +513,12 @@ function createDJPads() {
       if (!isActive) {
         isActive = true;
         pad.classList.add('active');
+        
+        // Инициализируем аудио контекст при первом взаимодействии
+        if (!audioContext) {
+          initAudioContext();
+        }
+        
         playSound(i);
         
         // Проверка попадания в ритм, если активен режим ритма
@@ -403,6 +555,12 @@ function createDJPads() {
       if (!isActive) {
         isActive = true;
         pad.classList.add('active');
+        
+        // Инициализируем аудио контекст при первом взаимодействии
+        if (!audioContext) {
+          initAudioContext();
+        }
+        
         playSound(i);
         
         // Проверка попадания в ритм, если активен режим ритма
