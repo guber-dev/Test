@@ -46,7 +46,11 @@ body {
     width: 90%;
     max-width: 500px;
     height: 70vh;
-    margin: 50px auto;
+    margin: 0 auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .pad {
@@ -62,10 +66,28 @@ body {
     align-items: center;
     justify-content: center;
     position: relative;
-    border: 1px solid;
-    border-image: linear-gradient(180deg, rgba(85, 85, 85, 0.25) 0%, rgba(46, 46, 46, 0.25) 100%) 1;
     will-change: transform; /* Оптимизация для анимации */
     transform: translateZ(0); /* Включает аппаратное ускорение */
+    overflow: hidden; /* Чтобы содержимое не выходило за пределы скругленных углов */
+}
+
+/* Псевдоэлемент для создания градиентной рамки с правильным border-radius */
+.pad::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    background: linear-gradient(180deg, rgba(85, 85, 85, 0.25) 0%, rgba(46, 46, 46, 0.25) 100%) border-box;
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) padding-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    pointer-events: none; /* Чтобы рамка не мешала кликам */
 }
 
 .pad-label {
@@ -84,27 +106,14 @@ body {
     background: radial-gradient(circle, #E42929 25%, #FF3D00 50%, #FF0000 65%);
 }
 
-/* Заголовок приложения */
-.app-header {
-    text-align: center;
-    padding: 20px 0;
-    font-size: 24px;
-    font-weight: bold;
-}
-
-.app-footer {
-    text-align: center;
-    padding: 20px 0;
-    font-size: 18px;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-}
-
 /* Счетчик MLDX */
 .mldx-counter {
     text-align: center;
-    margin: 20px 0;
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    z-index: 10;
 }
 
 .mldx-counter .value {
@@ -200,4 +209,9 @@ body {
 
 .toggle-debug:hover {
     background-color: #45a049;
+}
+
+/* Удаляем стили для заголовка и подвала */
+.app-header, .app-footer {
+    display: none;
 }

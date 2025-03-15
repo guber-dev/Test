@@ -90,26 +90,13 @@ function createDJPads() {
     'Melody', 'Clap', 'Siren'
   ];
 
-  // Создание заголовка приложения
-  const appHeader = document.createElement('div');
-  appHeader.className = 'app-header';
-  appHeader.textContent = 'Melodix Drumpad';
-  document.querySelector('.app-container').appendChild(appHeader);
-
   // Создание счетчика MLDX
   const mldxCounter = document.createElement('div');
   mldxCounter.className = 'mldx-counter';
-  
-  const counterValue = document.createElement('div');
-  counterValue.className = 'value';
-  counterValue.textContent = score.toString(); // Начальное значение 0
-  
-  const counterLabel = document.createElement('div');
-  counterLabel.className = 'label';
-  counterLabel.textContent = '$MLDX';
-  
-  mldxCounter.appendChild(counterValue);
-  mldxCounter.appendChild(counterLabel);
+  mldxCounter.innerHTML = `
+    <div class="value">${score}</div>
+    <div class="label">MLDX</div>
+  `;
   document.querySelector('.app-container').appendChild(mldxCounter);
 
   // Создание контейнера для падов
@@ -117,47 +104,37 @@ function createDJPads() {
   padsContainer.className = 'pads-container';
   document.querySelector('.app-container').appendChild(padsContainer);
 
-  // Создание 12 падов (3 колонки x 4 ряда)
+  // Создание падов
   for (let i = 0; i < 12; i++) {
     const pad = document.createElement('div');
     pad.className = 'pad';
     
-    // Добавление названия инструмента
     const padLabel = document.createElement('div');
     padLabel.className = 'pad-label';
     padLabel.textContent = padLabels[i];
+    
     pad.appendChild(padLabel);
+    padsContainer.appendChild(pad);
     
     // Создание аудио элемента
-    const audio = document.createElement('audio');
-    audio.src = sounds[i];
-    pad.appendChild(audio);
-
+    const audio = new Audio(sounds[i]);
+    
     // Обработчик нажатия на пад
-    pad.addEventListener('click', function() {
+    pad.addEventListener('click', () => {
       // Воспроизведение звука
-      const sound = this.querySelector('audio');
-      sound.currentTime = 0;
-      sound.play()
-        .catch(err => console.error(`Ошибка воспроизведения звука:`, err.message));
-
-      // Увеличиваем счет
-      updateScore();
-
-      // Анимация нажатия (изменение цвета)
-      this.classList.add('active');
+      audio.currentTime = 0;
+      audio.play();
       
+      // Добавление класса active для анимации
+      pad.classList.add('active');
+      
+      // Увеличение счета
+      updateScore();
+      
+      // Удаление класса active после анимации
       setTimeout(() => {
-        this.classList.remove('active');
-      }, 300);
+        pad.classList.remove('active');
+      }, 150); // Длительность анимации
     });
-
-    padsContainer.appendChild(pad);
   }
-  
-  // Создание подвала приложения
-  const appFooter = document.createElement('div');
-  appFooter.className = 'app-footer';
-  appFooter.textContent = 'Melodix Drumpad';
-  document.querySelector('.app-container').appendChild(appFooter);
 }
