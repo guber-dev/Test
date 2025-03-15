@@ -2,10 +2,12 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#1F1F1F">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
     <title>Melodix DJ Pads</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,13 +15,38 @@
     <link rel="stylesheet" href="main.css">
     <!-- Сначала загружаем Telegram WebApp API -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* Дополнительные стили для предотвращения скролла */
+        html, body {
+            overscroll-behavior: none; /* Предотвращает pull-to-refresh и overscroll */
+            touch-action: manipulation; /* Оптимизирует тач-события */
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        /* Контейнер для скролла внутри приложения */
+        .app-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
 </head>
 <body>
-    <!-- Переключатель режима отладки -->
-    <div id="debug-mode-toggle" style="position: fixed; top: 10px; left: 10px; z-index: 1001; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; color: white; font-family: sans-serif; font-size: 12px;">
-        <label>
-            <input type="checkbox" id="use-mock-tg" onchange="toggleDebugMode()"> Использовать эмуляцию Telegram
-        </label>
+    <!-- Контейнер для скролла внутри приложения -->
+    <div class="app-container">
+        <!-- Переключатель режима отладки -->
+        <div id="debug-mode-toggle" style="position: fixed; top: 10px; left: 10px; z-index: 1001; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; color: white; font-family: sans-serif; font-size: 12px;">
+            <label>
+                <input type="checkbox" id="use-mock-tg" onchange="toggleDebugMode()"> Использовать эмуляцию Telegram
+            </label>
+        </div>
     </div>
 
     <script>
@@ -220,6 +247,12 @@
             } else if (window.Telegram && window.Telegram.WebApp) {
                 console.log("Используется реальный Telegram WebApp");
                 console.log("User data:", window.Telegram.WebApp.initDataUnsafe);
+                
+                // Сразу открываем на весь экран
+                window.Telegram.WebApp.expand();
+                
+                // Включаем подтверждение закрытия
+                window.Telegram.WebApp.enableClosingConfirmation();
             } else {
                 console.warn("Telegram WebApp не обнаружен, автоматически включена эмуляция");
                 createMockTelegramWebApp();

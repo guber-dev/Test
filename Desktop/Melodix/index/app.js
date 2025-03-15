@@ -60,6 +60,39 @@ function log(message, data = null) {
   console.log(`[DEBUG] ${message}`, data);
 }
 
+// Блокировка случайного закрытия приложения при скролле вниз
+function preventAccidentalClose() {
+  // Предотвращаем закрытие при скролле вниз
+  document.body.addEventListener('touchmove', function(e) {
+    // Если скролл достиг конца и пытается продолжиться вниз
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+      // Предотвращаем дальнейший скролл
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    }
+  }, { passive: false });
+  
+  // Предотвращаем закрытие при свайпе вниз
+  let startY;
+  document.body.addEventListener('touchstart', function(e) {
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+  
+  document.body.addEventListener('touchmove', function(e) {
+    const currentY = e.touches[0].clientY;
+    // Если свайп вниз и мы в верхней части страницы
+    if (currentY > startY && window.scrollY <= 0) {
+      // Предотвращаем свайп
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    }
+  }, { passive: false });
+  
+  log('Блокировка случайного закрытия активирована');
+}
+
 // При загрузке документа
 document.addEventListener('DOMContentLoaded', () => {
   // Создаем панель отладки
@@ -78,6 +111,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Раскрыть на полную высоту
     tg.expand();
     log('Приложение развернуто на полную высоту');
+    
+    // Активируем блокировку случайного закрытия
+    preventAccidentalClose();
     
     // Создание DJ-падов
     createDJPads();
@@ -117,7 +153,7 @@ function createDJPads() {
   const appHeader = document.createElement('div');
   appHeader.className = 'app-header';
   appHeader.textContent = 'Melodix Drumpad';
-  document.body.appendChild(appHeader);
+  document.querySelector('.app-container').appendChild(appHeader);
 
   // Создание счетчика MLDX
   const mldxCounter = document.createElement('div');
@@ -133,12 +169,12 @@ function createDJPads() {
   
   mldxCounter.appendChild(counterValue);
   mldxCounter.appendChild(counterLabel);
-  document.body.appendChild(mldxCounter);
+  document.querySelector('.app-container').appendChild(mldxCounter);
 
   // Создание контейнера для падов
   const padsContainer = document.createElement('div');
   padsContainer.className = 'pads-container';
-  document.body.appendChild(padsContainer);
+  document.querySelector('.app-container').appendChild(padsContainer);
 
   // Создание 12 падов (3 колонки x 4 ряда)
   for (let i = 0; i < 12; i++) {
@@ -170,7 +206,7 @@ function createDJPads() {
       
       setTimeout(() => {
         this.classList.remove('active');
-      }, 100);
+      }, 300); // Увеличиваем время, чтобы эффект был более заметен
     });
 
     padsContainer.appendChild(pad);
@@ -180,7 +216,7 @@ function createDJPads() {
   const appFooter = document.createElement('div');
   appFooter.className = 'app-footer';
   appFooter.textContent = 'Melodix Drumpad';
-  document.body.appendChild(appFooter);
+  document.querySelector('.app-container').appendChild(appFooter);
   
   log('DJ-пады созданы', { count: 12 });
 }
