@@ -4,6 +4,27 @@ let tg = window.Telegram.WebApp;
 // Глобальная переменная для хранения счета
 let score = 0;
 
+// Настройка цветов и темы для Telegram Mini App
+function setupTelegramColors() {
+  try {
+    // Устанавливаем цвет верхней панели
+    tg.setHeaderColor('#1F1F1F');
+    
+    // Устанавливаем цвет нижней панели
+    tg.setBackgroundColor('#1F1F1F');
+    
+    // Запрашиваем тему
+    tg.requestTheme();
+    
+    // Запрашиваем viewport
+    tg.requestViewport();
+    
+    console.log('Настройки Telegram успешно применены');
+  } catch (error) {
+    console.error('Ошибка при настройке Telegram:', error.message);
+  }
+}
+
 // Блокировка случайного закрытия приложения при скролле вниз
 function preventAccidentalClose() {
   // Предотвращаем закрытие при скролле вниз
@@ -47,9 +68,11 @@ function updateScore() {
 // При загрузке документа
 document.addEventListener('DOMContentLoaded', () => {
   try {
+    // Инициализация Telegram Mini App
+    setupTelegramColors();
+    
     // Раскрыть на полную высоту
     tg.expand();
-    tg.setViewportHeight(100); // Устанавливаем высоту вьюпорта на 100%
     
     // Включаем подтверждение закрытия
     tg.enableClosingConfirmation();
@@ -62,6 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
   } catch (error) {
     console.error('Ошибка при инициализации:', error.message);
+    // Продолжаем инициализацию даже при ошибке с Telegram API
+    preventAccidentalClose();
+    createDJPads();
   }
 });
 
@@ -123,21 +149,40 @@ function createDJPads() {
     }
   };
   
-  // Предзагрузка всех звуков
-  const preloadSounds = async () => {
-    for (let i = 0; i < sounds.length; i++) {
-      audioBuffers[i] = await loadSound(sounds[i]);
+  // Функция для воспроизведения звука
+  const playSound = (index) => {
+    try {
+      if (audioBuffers[index]) {
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffers[index];
+        source.connect(audioContext.destination);
+        source.start(0);
+      } else {
+        // Резервный вариант, если буфер еще не загружен
+        const audio = new Audio(sounds[index]);
+        audio.play().catch(err => console.error('Ошибка воспроизведения звука:', err));
+      }
+    } catch (error) {
+      console.error('Ошибка при воспроизведении звука:', error);
+      // Резервный вариант при ошибке Web Audio API
+      const audio = new Audio(sounds[index]);
+      audio.play().catch(err => console.error('Ошибка резервного воспроизведения:', err));
     }
   };
   
-  // Функция для воспроизведения звука
-  const playSound = (index) => {
-    if (!audioBuffers[index]) return;
-    
-    const source = audioContext.createBufferSource();
-    source.buffer = audioBuffers[index];
-    source.connect(audioContext.destination);
-    source.start(0);
+  // Предзагрузка всех звуков
+  const preloadSounds = async () => {
+    try {
+      for (let i = 0; i < sounds.length; i++) {
+        try {
+          audioBuffers[i] = await loadSound(sounds[i]);
+        } catch (error) {
+          console.error(`Ошибка загрузки звука ${i}:`, error);
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка при предзагрузке звуков:', error);
+    }
   };
   
   // Создание падов
