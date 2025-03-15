@@ -11,13 +11,14 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="full-screen" content="yes">
     <meta name="browsermode" content="application">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;">
     <title>Melodix DJ Pads</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="main.css">
-    <!-- Иконки Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="main.css">
     <!-- Сначала загружаем Telegram WebApp API -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -107,17 +108,17 @@
     
     <!-- Нижнее меню -->
     <div class="bottom-menu">
-        <a href="#lessons" class="menu-item" data-section="lessons-section">
-            <div class="menu-icon"><i class="fas fa-book"></i></div>
-            <div class="menu-label">Уроки</div>
+        <a href="#lessons" data-section="lessons-section">
+            <i class="fas fa-book"></i>
+            <span>Уроки</span>
         </a>
-        <a href="#game" class="menu-item active" data-section="game-section">
-            <div class="menu-icon"><i class="fas fa-gamepad"></i></div>
-            <div class="menu-label">Игра</div>
+        <a href="#game" data-section="game-section" class="active">
+            <i class="fas fa-gamepad"></i>
+            <span>Игра</span>
         </a>
-        <a href="#profile" class="menu-item" data-section="profile-section">
-            <div class="menu-icon"><i class="fas fa-user"></i></div>
-            <div class="menu-label">Профиль</div>
+        <a href="#profile" data-section="profile-section">
+            <i class="fas fa-user"></i>
+            <span>Профиль</span>
         </a>
     </div>
 

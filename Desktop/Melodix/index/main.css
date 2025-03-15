@@ -41,16 +41,10 @@ body {
 .pads-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(4, 1fr);
-    gap: 10px;
-    width: 90%;
+    gap: 15px;
+    padding: 20px;
     max-width: 500px;
-    height: 65vh;
     margin: 0 auto;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
 }
 
 .pad {
@@ -344,65 +338,74 @@ body {
     position: fixed;
     bottom: 0;
     left: 0;
-    right: 0;
-    height: 60px;
-    background: rgba(20, 20, 20, 0.9);
+    width: 100%;
+    background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     display: flex;
     justify-content: space-around;
-    align-items: center;
-    z-index: 1000;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+    z-index: 100;
 }
 
-.menu-item {
+.bottom-menu a {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    color: #999;
+    color: #888;
     text-decoration: none;
     font-size: 12px;
-    padding: 5px 0;
-    width: 33.33%;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
-.menu-item.active {
-    color: #FFFFFF;
+.bottom-menu a i {
+    font-size: 20px;
+    margin-bottom: 5px;
 }
 
-.menu-icon {
-    font-size: 24px;
-    margin-bottom: 4px;
+.bottom-menu a.active {
+    color: #ff3366;
 }
 
-/* Обновляем стили для контейнера приложения, чтобы учесть нижнее меню */
-.app-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 60px; /* Оставляем место для нижнего меню */
+.bottom-menu a:hover {
+    color: #fff;
+}
+
+/* Стили для секций */
+.section {
+    display: none;
+    padding: 20px;
+    padding-bottom: 70px; /* Отступ для нижнего меню */
+    height: 100%;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    background: url(./images/BG.png) no-repeat center center/cover fixed #1F1F1F;
-    background-blend-mode: multiply;
+}
+
+.section.active {
+    display: block;
+}
+
+/* Анимация перехода между секциями */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.section.active {
+    animation: fadeIn 0.3s ease forwards;
 }
 
 /* Стили для контейнеров разделов */
 .section-container {
     display: none;
+    padding: 20px;
+    padding-bottom: 70px; /* Отступ для нижнего меню */
     height: 100%;
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
+    overflow-y: auto;
 }
 
 .section-container.active {
     display: block;
+    animation: fadeIn 0.3s ease forwards;
 }
 
 /* Стили для заголовков разделов */
@@ -494,4 +497,17 @@ body {
 .stat-label {
     font-size: 14px;
     color: #999;
+}
+
+/* Обновляем стили для контейнера приложения */
+.app-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 60px; /* Оставляем место для нижнего меню */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: url(./images/BG.png) no-repeat center center/cover fixed #1F1F1F;
+    background-blend-mode: multiply;
 }
