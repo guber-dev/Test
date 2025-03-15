@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try {
     // Раскрыть на полную высоту
     tg.expand();
+    tg.setViewportHeight(100); // Устанавливаем высоту вьюпорта на 100%
     
     // Включаем подтверждение закрытия
     tg.enableClosingConfirmation();
@@ -95,7 +96,7 @@ function createDJPads() {
   mldxCounter.className = 'mldx-counter';
   mldxCounter.innerHTML = `
     <div class="value">${score}</div>
-    <div class="label">MLDX</div>
+    <div class="label">$MLDX</div>
   `;
   document.querySelector('.app-container').appendChild(mldxCounter);
 
@@ -104,10 +105,46 @@ function createDJPads() {
   padsContainer.className = 'pads-container';
   document.querySelector('.app-container').appendChild(padsContainer);
 
+  // Создание аудио контекста для более быстрого воспроизведения
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  
+  // Кэш для аудио буферов
+  const audioBuffers = {};
+  
+  // Загрузка звуков
+  const loadSound = async (url) => {
+    try {
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      return await audioContext.decodeAudioData(arrayBuffer);
+    } catch (error) {
+      console.error('Ошибка загрузки звука:', error);
+      return null;
+    }
+  };
+  
+  // Предзагрузка всех звуков
+  const preloadSounds = async () => {
+    for (let i = 0; i < sounds.length; i++) {
+      audioBuffers[i] = await loadSound(sounds[i]);
+    }
+  };
+  
+  // Функция для воспроизведения звука
+  const playSound = (index) => {
+    if (!audioBuffers[index]) return;
+    
+    const source = audioContext.createBufferSource();
+    source.buffer = audioBuffers[index];
+    source.connect(audioContext.destination);
+    source.start(0);
+  };
+  
   // Создание падов
   for (let i = 0; i < 12; i++) {
     const pad = document.createElement('div');
     pad.className = 'pad';
+    pad.dataset.index = i; // Сохраняем индекс для идентификации пада
     
     const padLabel = document.createElement('div');
     padLabel.className = 'pad-label';
@@ -116,25 +153,60 @@ function createDJPads() {
     pad.appendChild(padLabel);
     padsContainer.appendChild(pad);
     
-    // Создание аудио элемента
-    const audio = new Audio(sounds[i]);
+    // Флаг для отслеживания активного состояния
+    let isActive = false;
     
-    // Обработчик нажатия на пад
-    pad.addEventListener('click', () => {
-      // Воспроизведение звука
-      audio.currentTime = 0;
-      audio.play();
+    // Обработчик начала касания
+    pad.addEventListener('touchstart', (e) => {
+      e.preventDefault(); // Предотвращаем стандартное поведение
       
-      // Добавление класса active для анимации
-      pad.classList.add('active');
-      
-      // Увеличение счета
-      updateScore();
-      
-      // Удаление класса active после анимации
-      setTimeout(() => {
+      if (!isActive) {
+        isActive = true;
+        pad.classList.add('active');
+        playSound(i);
+        updateScore();
+      }
+    }, { passive: false });
+    
+    // Обработчик окончания касания
+    pad.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      isActive = false;
+      pad.classList.remove('active');
+    }, { passive: false });
+    
+    // Обработчик отмены касания
+    pad.addEventListener('touchcancel', (e) => {
+      e.preventDefault();
+      isActive = false;
+      pad.classList.remove('active');
+    }, { passive: false });
+    
+    // Обработчик клика для десктопа
+    pad.addEventListener('mousedown', (e) => {
+      if (!isActive) {
+        isActive = true;
+        pad.classList.add('active');
+        playSound(i);
+        updateScore();
+      }
+    });
+    
+    // Обработчик окончания клика для десктопа
+    pad.addEventListener('mouseup', () => {
+      isActive = false;
+      pad.classList.remove('active');
+    });
+    
+    // Обработчик выхода мыши за пределы пада
+    pad.addEventListener('mouseleave', () => {
+      if (isActive) {
+        isActive = false;
         pad.classList.remove('active');
-      }, 150); // Длительность анимации
+      }
     });
   }
+  
+  // Предзагружаем звуки
+  preloadSounds();
 }
