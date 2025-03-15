@@ -11,9 +11,11 @@ let score = 0;
 // Настройка цветов и темы для Telegram Mini App
 function setupTelegramColors() {
   try {
-    // Устанавливаем цвет верхней панели (используем правильный формат)
+    console.log('Инициализация Telegram WebApp...');
+    
+    // Устанавливаем цвет верхней панели
     if (tg.setHeaderColor) {
-      tg.setHeaderColor('bg_color');
+      tg.setHeaderColor('#1F1F1F');
     }
     
     // Устанавливаем цвет нижней панели
@@ -111,15 +113,21 @@ function switchSection(sectionId) {
 
 // При загрузке документа
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM загружен, инициализация приложения...');
+  
   try {
     // Инициализация Telegram Mini App
     setupTelegramColors();
     
     // Раскрыть на полную высоту
-    tg.expand();
+    if (tg.expand) {
+      tg.expand();
+    }
     
     // Включаем подтверждение закрытия
-    tg.enableClosingConfirmation();
+    if (tg.enableClosingConfirmation) {
+      tg.enableClosingConfirmation();
+    }
     
     // Активируем блокировку случайного закрытия
     preventAccidentalClose();
@@ -132,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // initProfile();
     // setupMenuHandlers();
     
+    console.log('Приложение успешно инициализировано');
   } catch (error) {
     console.error('Ошибка при инициализации:', error.message);
     // Продолжаем инициализацию даже при ошибке с Telegram API
@@ -158,6 +167,8 @@ function setupMenuHandlers() {
 
 // Функция для создания DJ-падов
 function createDJPads() {
+  console.log('Создание DJ-падов...');
+  
   // Проверяем наличие контейнера .app-container
   let appContainer = document.querySelector('.app-container');
   if (!appContainer) {
@@ -211,15 +222,25 @@ function createDJPads() {
   const padsContainer = document.createElement('div');
   padsContainer.className = 'pads-container';
   appContainer.appendChild(padsContainer);
+  
+  console.log('Контейнер для падов создан');
 
   // Создание аудио контекста для более быстрого воспроизведения
-  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  let audioContext;
+  try {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  } catch (error) {
+    console.error('Ошибка при создании аудио контекста:', error);
+    // Продолжаем без аудио контекста
+  }
   
   // Кэш для аудио буферов
   const audioBuffers = {};
   
   // Загрузка звуков
   const loadSound = async (url) => {
+    if (!audioContext) return null;
+    
     try {
       const response = await fetch(url);
       const arrayBuffer = await response.arrayBuffer();
@@ -233,13 +254,13 @@ function createDJPads() {
   // Функция для воспроизведения звука
   const playSound = (index) => {
     try {
-      if (audioBuffers[index]) {
+      if (audioContext && audioBuffers[index]) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[index];
         source.connect(audioContext.destination);
         source.start(0);
       } else {
-        // Резервный вариант, если буфер еще не загружен
+        // Резервный вариант, если буфер еще не загружен или нет аудио контекста
         const audio = new Audio(sounds[index]);
         audio.play().catch(err => console.error('Ошибка воспроизведения звука:', err));
       }
@@ -253,6 +274,8 @@ function createDJPads() {
   
   // Предзагрузка всех звуков
   const preloadSounds = async () => {
+    if (!audioContext) return;
+    
     try {
       for (let i = 0; i < sounds.length; i++) {
         try {
@@ -261,6 +284,7 @@ function createDJPads() {
           console.error(`Ошибка загрузки звука ${i}:`, error);
         }
       }
+      console.log('Звуки предзагружены');
     } catch (error) {
       console.error('Ошибка при предзагрузке звуков:', error);
     }
@@ -279,6 +303,8 @@ function createDJPads() {
     pad.appendChild(padLabel);
     padsContainer.appendChild(pad);
     
+    console.log(`Пад ${i} (${padLabels[i]}) создан`);
+    
     // Флаг для отслеживания активного состояния
     let isActive = false;
     
@@ -290,13 +316,7 @@ function createDJPads() {
         isActive = true;
         pad.classList.add('active');
         playSound(i);
-        
-        // Если урок активен, проверяем попадание в ритм - временно отключено
-        // if (lessonActive && currentLesson) {
-        //   checkRhythmHit(i);
-        // } else {
-          updateScore();
-        // }
+        updateScore();
       }
     }, { passive: false });
     
@@ -320,13 +340,7 @@ function createDJPads() {
         isActive = true;
         pad.classList.add('active');
         playSound(i);
-        
-        // Если урок активен, проверяем попадание в ритм - временно отключено
-        // if (lessonActive && currentLesson) {
-        //   checkRhythmHit(i);
-        // } else {
-          updateScore();
-        // }
+        updateScore();
       }
     });
     
@@ -344,6 +358,8 @@ function createDJPads() {
       }
     });
   }
+  
+  console.log('Все пады созданы, начинаем предзагрузку звуков');
   
   // Предзагружаем звуки
   preloadSounds();

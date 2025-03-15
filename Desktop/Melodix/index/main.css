@@ -41,13 +41,13 @@ html, body {
     position: fixed;
     top: 20px;
     right: 20px;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.7);
     border-radius: 12px;
     padding: 8px 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    z-index: 10;
+    z-index: 100;
 }
 
 .mldx-counter .value {
@@ -66,25 +66,30 @@ html, body {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(4, 1fr);
-    gap: 12px;
-    width: 100%;
+    gap: 10px;
+    width: 90%;
     max-width: 500px;
+    height: 65vh;
     margin: 60px auto 20px;
+    position: relative;
+    z-index: 10;
 }
 
 /* Стили для падов */
 .pad {
     position: relative;
     aspect-ratio: 1/1;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    background: linear-gradient(180deg, #1F1F1F 0%, #141414 100%);
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     overflow: hidden;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
     transition: transform 0.1s ease-out, background-color 0.1s ease-out;
     will-change: transform, background-color;
+    transform: translateZ(0); /* Включает аппаратное ускорение */
 }
 
 .pad::before {
@@ -97,7 +102,7 @@ html, body {
     border-radius: 12px;
     background: linear-gradient(135deg, #FF6B6B, #4ECDC4);
     opacity: 0.7;
-    z-index: -1;
+    z-index: 1;
     transition: opacity 0.2s ease;
 }
 
@@ -111,12 +116,14 @@ html, body {
 }
 
 .pad-label {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 500;
     color: white;
     text-align: center;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     pointer-events: none;
+    position: relative;
+    z-index: 2;
 }
 
 /* Анимации для падов */
@@ -137,77 +144,6 @@ html, body {
 
 .pad:active {
     animation: pulse 0.3s ease-in-out;
-}
-
-/* Стили для DJ-падов */
-.pads-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(4, 1fr);
-    gap: 10px;
-    width: 90%;
-    max-width: 500px;
-    height: 65vh;
-    margin: 0 auto;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-.pad {
-    width: 128px;
-    height: 128px;
-    flex-shrink: 0;
-    border-radius: 12px;
-    background: linear-gradient(180deg, #1F1F1F 0%, #141414 100%);
-    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-    cursor: pointer;
-    transition: all 0.1s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    will-change: transform; /* Оптимизация для анимации */
-    transform: translateZ(0); /* Включает аппаратное ускорение */
-    overflow: hidden; /* Чтобы содержимое не выходило за пределы скругленных углов */
-}
-
-/* Псевдоэлемент для создания градиентной рамки с правильным border-radius */
-.pad::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 12px;
-    border: 1px solid transparent;
-    background: linear-gradient(180deg, rgba(85, 85, 85, 0.25) 0%, rgba(46, 46, 46, 0.25) 100%) border-box;
-    -webkit-mask: 
-        linear-gradient(#fff 0 0) padding-box, 
-        linear-gradient(#fff 0 0);
-    mask: 
-        linear-gradient(#fff 0 0) padding-box, 
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: destination-out;
-    mask-composite: exclude;
-    pointer-events: none; /* Чтобы рамка не мешала кликам */
-}
-
-.pad-label {
-    color: #FFFFFF;
-    font-size: 14px;
-    font-weight: 500;
-    text-align: left;
-    position: absolute;
-    bottom: 16px;
-    left: 16px;
-}
-
-.pad:active, .pad.active {
-    transform: scale(0.98); /* Уменьшаем эффект масштабирования */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     background: radial-gradient(circle, #E42929 25%, #FF3D00 50%, #FF0000 65%);
 }
 
