@@ -465,9 +465,20 @@ body {
 }
 
 .profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    background-color: #333;
+}
+
+.profile-avatar i {
     font-size: 80px;
     color: #666;
-    margin-bottom: 15px;
 }
 
 .profile-name {
@@ -497,6 +508,12 @@ body {
 .stat-label {
     font-size: 14px;
     color: #999;
+}
+
+.user-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 /* Обновляем стили для контейнера приложения */

@@ -130,6 +130,48 @@ function showHitResult(result) {
   }, 500);
 }
 
+// Загрузка данных пользователя из Telegram
+function loadUserData() {
+    try {
+        if (window.Telegram && window.Telegram.WebApp) {
+            const user = window.Telegram.WebApp.initDataUnsafe?.user;
+            
+            if (user) {
+                console.log('Данные пользователя получены:', user);
+                
+                // Обновляем имя пользователя
+                const nameElement = document.querySelector('.profile-name');
+                if (nameElement) {
+                    const fullName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+                    nameElement.textContent = fullName;
+                }
+                
+                // Обновляем аватар пользователя, если есть фото
+                const avatarElement = document.querySelector('.profile-avatar');
+                if (avatarElement && user.photo_url) {
+                    // Удаляем иконку Font Awesome
+                    avatarElement.innerHTML = '';
+                    
+                    // Создаем элемент изображения
+                    const img = document.createElement('img');
+                    img.src = user.photo_url;
+                    img.alt = 'Аватар пользователя';
+                    img.className = 'user-avatar-img';
+                    
+                    // Добавляем изображение в контейнер аватара
+                    avatarElement.appendChild(img);
+                }
+            } else {
+                console.warn('Данные пользователя недоступны');
+            }
+        } else {
+            console.warn('Telegram WebApp API недоступен');
+        }
+    } catch (error) {
+        console.error('Ошибка при загрузке данных пользователя:', error);
+    }
+}
+
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
     // Инициализация Telegram Mini App
@@ -146,6 +188,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Предотвращаем случайное закрытие
     preventAccidentalClose();
+    
+    // Загружаем данные пользователя
+    loadUserData();
     
     // Показываем секцию игры по умолчанию
     switchSection('game-section');
@@ -309,18 +354,18 @@ function createDJPads() {
     
     // Определяем звуки и их метки
     const sounds = [
-        { src: './sounds/kick.mp3', label: 'Kick' },
-        { src: './sounds/snare.mp3', label: 'Snare' },
-        { src: './sounds/hihat.mp3', label: 'Hi-Hat' },
-        { src: './sounds/clap.mp3', label: 'Clap' },
-        { src: './sounds/tom.mp3', label: 'Tom' },
-        { src: './sounds/crash.mp3', label: 'Crash' },
-        { src: './sounds/fx1.mp3', label: 'FX 1' },
-        { src: './sounds/fx2.mp3', label: 'FX 2' },
-        { src: './sounds/vocal1.mp3', label: 'Vocal 1' },
-        { src: './sounds/vocal2.mp3', label: 'Vocal 2' },
-        { src: './sounds/bass.mp3', label: 'Bass' },
-        { src: './sounds/synth.mp3', label: 'Synth' }
+        { src: './sounds/Kick.mp3', label: 'Kick' },
+        { src: './sounds/Snare01.mp3', label: 'Snare' },
+        { src: './sounds/Hat.mp3', label: 'Hi-Hat' },
+        { src: './sounds/Rim.mp3', label: 'Rim' },
+        { src: './sounds/TomF.mp3', label: 'Tom' },
+        { src: './sounds/Crash01.mp3', label: 'Crash' },
+        { src: './sounds/Hat_Open.mp3', label: 'Open Hat' },
+        { src: './sounds/Crash_02.mp3', label: 'Crash 2' },
+        { src: './sounds/Ride01.mp3', label: 'Ride' },
+        { src: './sounds/Ride02.mp3', label: 'Ride 2' },
+        { src: './sounds/TomL.mp3', label: 'Tom L' },
+        { src: './sounds/Shake.mp3', label: 'Shake' }
     ];
     
     // Создаем пады для каждого звука
@@ -329,11 +374,17 @@ function createDJPads() {
         const pad = document.createElement('div');
         pad.className = 'pad';
         pad.setAttribute('data-sound', sound.src);
+        pad.setAttribute('data-index', index);
         
         // Создаем аудио элемент
         const audio = document.createElement('audio');
         audio.src = sound.src;
         audio.preload = 'auto';
+        
+        // Добавляем обработчик ошибок для аудио
+        audio.addEventListener('error', function(e) {
+            console.error(`Ошибка загрузки звука ${sound.src}:`, e);
+        });
         
         // Создаем метку для пада
         const label = document.createElement('div');
@@ -362,12 +413,27 @@ function createDJPads() {
 // Воспроизведение звука
 function playSound(pad) {
     const audio = pad.querySelector('audio');
+    const soundPath = pad.getAttribute('data-sound');
+    
+    console.log(`Воспроизведение звука: ${soundPath}`);
     
     // Сбрасываем воспроизведение
     audio.currentTime = 0;
     
     // Воспроизводим звук
-    audio.play();
+    audio.play()
+        .then(() => {
+            console.log(`Звук ${soundPath} успешно воспроизведен`);
+        })
+        .catch(error => {
+            console.error(`Ошибка воспроизведения звука ${soundPath}:`, error);
+            
+            // Пробуем альтернативный способ воспроизведения
+            const newAudio = new Audio(soundPath);
+            newAudio.play()
+                .then(() => console.log(`Звук ${soundPath} воспроизведен альтернативным способом`))
+                .catch(err => console.error(`Не удалось воспроизвести звук ${soundPath} альтернативным способом:`, err));
+        });
     
     // Добавляем класс для анимации
     pad.classList.add('active');
