@@ -220,6 +220,12 @@ function initMenuHandlers() {
             console.log('Запуск урока');
         });
     });
+    
+    // Обработчик для кнопки приглашения друзей
+    const inviteButton = document.getElementById('invite-friends-btn');
+    if (inviteButton) {
+        inviteButton.addEventListener('click', shareReferralLink);
+    }
 }
 
 // Функция для создания интерфейса режима ритма
@@ -445,4 +451,78 @@ function playSound(pad) {
     
     // Обновляем счет
     updateScore(1);
+}
+
+// Функция для генерации и отправки реферальной ссылки
+function shareReferralLink() {
+    // Используем реферальную систему, если она доступна
+    if (window.referralSystem) {
+        window.referralSystem.shareReferralLink()
+            .then(success => {
+                if (!success) {
+                    console.error('Не удалось поделиться реферальной ссылкой');
+                    fallbackShareReferral();
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при шаринге реферальной ссылки:', error);
+                fallbackShareReferral();
+            });
+    } else {
+        // Запасной вариант, если реферальная система недоступна
+        fallbackShareReferral();
+    }
+}
+
+// Запасной вариант для шаринга реферальной ссылки
+function fallbackShareReferral() {
+    try {
+        // Получаем данные пользователя из Telegram
+        const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+        const userId = user?.id || 'anonymous';
+        
+        // Создаем простую реферальную ссылку
+        const referralCode = `ref_${userId}_${Date.now().toString(36)}`;
+        const referralLink = `https://t.me/your_bot_username?start=${referralCode}`;
+        
+        console.log('Сгенерирована запасная реферальная ссылка:', referralLink);
+        
+        // Если доступно Telegram API, используем его для шаринга
+        if (window.Telegram?.WebApp?.showPopup) {
+            window.Telegram.WebApp.showPopup({
+                title: 'Ваша реферальная ссылка',
+                message: 'Отправьте эту ссылку друзьям, чтобы получить бонусы!',
+                buttons: [
+                    {type: 'default', text: 'Копировать', id: 'copy'},
+                    {type: 'cancel', text: 'Закрыть'}
+                ]
+            }, function(buttonId) {
+                if (buttonId === 'copy') {
+                    navigator.clipboard.writeText(referralLink)
+                        .then(() => {
+                            window.Telegram.WebApp.showAlert('Ссылка скопирована!');
+                        })
+                        .catch(err => {
+                            console.error('Ошибка при копировании:', err);
+                            window.Telegram.WebApp.showAlert('Не удалось скопировать ссылку');
+                        });
+                }
+            });
+        } else if (navigator.share) {
+            // Используем Web Share API, если доступно
+            navigator.share({
+                title: 'Присоединяйся к Melodix DJ Pads!',
+                text: 'Попробуй крутое приложение для создания музыки!',
+                url: referralLink
+            })
+            .then(() => console.log('Успешно поделились'))
+            .catch(err => console.error('Ошибка при шаринге:', err));
+        } else {
+            // Запасной вариант - просто показываем ссылку
+            alert(`Ваша реферальная ссылка: ${referralLink}`);
+        }
+    } catch (error) {
+        console.error('Ошибка при создании реферальной ссылки:', error);
+        alert('Не удалось создать реферальную ссылку. Попробуйте позже.');
+    }
 }

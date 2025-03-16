@@ -45,6 +45,10 @@ body {
     padding: 20px;
     max-width: 500px;
     margin: 0 auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .pad {
@@ -343,7 +347,7 @@ body {
     backdrop-filter: blur(10px);
     display: flex;
     justify-content: space-around;
-    padding: 10px 0;
+    padding: 10px 0 30px; /* Увеличиваем нижний отступ на 20px */
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
     z-index: 100;
 }
@@ -461,7 +465,8 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
+    padding: 40px 20px 20px;
+    height: calc(100% - 60px); /* Вычитаем высоту нижнего меню */
 }
 
 .profile-avatar {
@@ -527,4 +532,56 @@ body {
     -webkit-overflow-scrolling: touch;
     background: url(./images/BG.png) no-repeat center center/cover fixed #1F1F1F;
     background-blend-mode: multiply;
+}
+
+/* Стили для реферальной системы */
+.referral-container {
+    margin-top: auto;
+    padding: 20px;
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 80px; /* Отступ от нижнего меню */
+}
+
+.invite-button {
+    background: linear-gradient(180deg, #E42929 0%, #B71C1C 100%);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 12px 25px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+    width: 100%;
+    max-width: 250px;
+}
+
+.invite-button i {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+.invite-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.invite-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.referral-info {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #999;
+    text-align: center;
 }
