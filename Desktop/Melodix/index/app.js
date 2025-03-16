@@ -457,16 +457,19 @@ function playSound(pad) {
 function shareReferralLink() {
     // Проверяем, доступна ли реферальная система
     if (window.referralSystem) {
-        window.referralSystem.shareReferralLink()
-            .then(success => {
-                if (!success) {
-                    fallbackShareReferral();
-                }
-            })
-            .catch(error => {
-                console.error('Ошибка при шаринге через реферальную систему:', error);
-                fallbackShareReferral();
-            });
+        // Получаем ссылку из реферальной системы
+        const referralLink = window.referralSystem.getReferralLink();
+        
+        if (referralLink) {
+            // Копируем ссылку в буфер обмена
+            copyToClipboard(referralLink);
+            
+            // Показываем виджет Telegram для шаринга
+            showTelegramShareWidget(referralLink);
+        } else {
+            // Если не удалось получить ссылку, используем запасной вариант
+            fallbackShareReferral();
+        }
     } else {
         fallbackShareReferral();
     }
@@ -493,40 +496,99 @@ function fallbackShareReferral() {
         
         console.log('Сгенерирована реферальная ссылка:', referralLink);
         
-        // Пытаемся поделиться ссылкой через Telegram API
-        if (window.Telegram?.WebApp?.showPopup) {
-            window.Telegram.WebApp.showPopup({
-                title: 'Ваша реферальная ссылка',
-                message: 'Отправьте эту ссылку друзьям, чтобы получить бонусы!',
-                buttons: [
-                    {type: 'default', text: 'Копировать', id: 'copy'},
-                    {type: 'cancel', text: 'Закрыть'}
-                ]
-            }, function(buttonId) {
-                if (buttonId === 'copy') {
-                    navigator.clipboard.writeText(referralLink)
-                        .then(() => {
-                            window.Telegram.WebApp.showAlert('Ссылка скопирована!');
-                        })
-                        .catch(err => {
-                            console.error('Ошибка при копировании:', err);
-                            window.Telegram.WebApp.showAlert('Не удалось скопировать ссылку');
-                        });
+        // Копируем ссылку в буфер обмена
+        copyToClipboard(referralLink);
+        
+        // Показываем виджет Telegram для шаринга
+        showTelegramShareWidget(referralLink);
+    } catch (error) {
+        console.error('Ошибка при шаринге реферальной ссылки:', error);
+        alert('Произошла ошибка при создании реферальной ссылки');
+    }
+}
+
+// Функция для копирования текста в буфер обмена
+function copyToClipboard(text) {
+    try {
+        navigator.clipboard.writeText(text)
+            .then(() => {
+                console.log('Ссылка скопирована в буфер обмена');
+                // Показываем уведомление о копировании
+                if (window.Telegram?.WebApp?.showPopup) {
+                    window.Telegram.WebApp.showAlert('Ссылка скопирована в буфер обмена!');
                 }
+            })
+            .catch(err => {
+                console.error('Ошибка при копировании в буфер обмена:', err);
+                // Пробуем альтернативный метод копирования
+                fallbackCopyToClipboard(text);
+            });
+    } catch (error) {
+        console.error('Ошибка при копировании в буфер обмена:', error);
+        fallbackCopyToClipboard(text);
+    }
+}
+
+// Запасной вариант копирования в буфер обмена
+function fallbackCopyToClipboard(text) {
+    try {
+        // Создаем временный элемент input
+        const tempInput = document.createElement('input');
+        tempInput.style.position = 'absolute';
+        tempInput.style.left = '-1000px';
+        tempInput.value = text;
+        document.body.appendChild(tempInput);
+        
+        // Выделяем и копируем текст
+        tempInput.select();
+        document.execCommand('copy');
+        
+        // Удаляем временный элемент
+        document.body.removeChild(tempInput);
+        
+        console.log('Ссылка скопирована альтернативным способом');
+        if (window.Telegram?.WebApp?.showPopup) {
+            window.Telegram.WebApp.showAlert('Ссылка скопирована в буфер обмена!');
+        }
+    } catch (error) {
+        console.error('Не удалось скопировать ссылку альтернативным способом:', error);
+    }
+}
+
+// Функция для показа виджета Telegram для шаринга
+function showTelegramShareWidget(referralLink) {
+    try {
+        // Используем Telegram Mini App API для шаринга
+        if (window.Telegram?.WebApp?.switchInlineQuery) {
+            // Подготавливаем текст для шаринга
+            const shareText = `Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы! ${referralLink}`;
+            
+            // Вызываем виджет для шаринга
+            window.Telegram.WebApp.switchInlineQuery(shareText);
+            console.log('Вызван виджет Telegram для шаринга');
+        } else if (window.Telegram?.WebApp?.openTelegramLink) {
+            // Альтернативный способ - открываем ссылку на шаринг
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы!')}`;
+            window.Telegram.WebApp.openTelegramLink(shareUrl);
+            console.log('Открыта ссылка на шаринг в Telegram');
+        } else if (window.Telegram?.WebApp?.showPopup) {
+            // Если нет прямых методов шаринга, показываем попап с инструкциями
+            window.Telegram.WebApp.showPopup({
+                title: 'Поделиться с друзьями',
+                message: 'Ссылка скопирована в буфер обмена. Вставьте её в чат, чтобы пригласить друзей!',
+                buttons: [
+                    {type: 'default', text: 'OK', id: 'ok'}
+                ]
             });
         } else if (navigator.share) {
             // Используем Web Share API, если доступно
             navigator.share({
-                title: 'Присоединяйся к Melodix DJ Pads!',
-                text: 'Попробуй крутое приложение для создания музыки!',
+                title: 'Melodix DJ Pads',
+                text: 'Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы!',
                 url: referralLink
             });
-        } else {
-            // Запасной вариант - просто показываем ссылку
-            alert(`Ваша реферальная ссылка: ${referralLink}`);
         }
     } catch (error) {
-        console.error('Ошибка при шаринге реферальной ссылки:', error);
-        alert('Произошла ошибка при создании реферальной ссылки');
+        console.error('Ошибка при вызове виджета Telegram для шаринга:', error);
     }
 }
