@@ -196,8 +196,7 @@ class ReferralSystem {
         }
         
         // Создаем ссылку на приложение с реферальным кодом
-        // ВАЖНО: Замените на реальный URL вашего приложения
-        return `https://t.me/your_bot_username/app?ref=${this.referralCode}`;
+        return `https://t.me/MelodixCryptoBot/app?ref=${this.referralCode}`;
     }
 
     // Получение статистики приглашений

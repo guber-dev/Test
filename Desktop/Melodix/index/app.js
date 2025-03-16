@@ -453,23 +453,21 @@ function playSound(pad) {
     updateScore(1);
 }
 
-// Функция для генерации и отправки реферальной ссылки
+// Функция для шаринга реферальной ссылки
 function shareReferralLink() {
-    // Используем реферальную систему, если она доступна
+    // Проверяем, доступна ли реферальная система
     if (window.referralSystem) {
         window.referralSystem.shareReferralLink()
             .then(success => {
                 if (!success) {
-                    console.error('Не удалось поделиться реферальной ссылкой');
                     fallbackShareReferral();
                 }
             })
             .catch(error => {
-                console.error('Ошибка при шаринге реферальной ссылки:', error);
+                console.error('Ошибка при шаринге через реферальную систему:', error);
                 fallbackShareReferral();
             });
     } else {
-        // Запасной вариант, если реферальная система недоступна
         fallbackShareReferral();
     }
 }
@@ -478,16 +476,24 @@ function shareReferralLink() {
 function fallbackShareReferral() {
     try {
         // Получаем данные пользователя из Telegram
-        const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
-        const userId = user?.id || 'anonymous';
+        const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+        if (!telegramUser) {
+            console.warn('Данные пользователя Telegram недоступны');
+            alert('Не удалось получить данные пользователя для создания реферальной ссылки');
+            return;
+        }
         
-        // Создаем простую реферальную ссылку
-        const referralCode = `ref_${userId}_${Date.now().toString(36)}`;
-        const referralLink = `https://t.me/your_bot_username?start=${referralCode}`;
+        // Генерируем простой реферальный код
+        const userId = telegramUser.id;
+        const timestamp = Date.now();
+        const referralCode = `ref_${userId}_${timestamp}`;
         
-        console.log('Сгенерирована запасная реферальная ссылка:', referralLink);
+        // Создаем реферальную ссылку
+        const referralLink = `https://t.me/MelodixCryptoBot/app?ref=${referralCode}`;
         
-        // Если доступно Telegram API, используем его для шаринга
+        console.log('Сгенерирована реферальная ссылка:', referralLink);
+        
+        // Пытаемся поделиться ссылкой через Telegram API
         if (window.Telegram?.WebApp?.showPopup) {
             window.Telegram.WebApp.showPopup({
                 title: 'Ваша реферальная ссылка',
@@ -514,15 +520,13 @@ function fallbackShareReferral() {
                 title: 'Присоединяйся к Melodix DJ Pads!',
                 text: 'Попробуй крутое приложение для создания музыки!',
                 url: referralLink
-            })
-            .then(() => console.log('Успешно поделились'))
-            .catch(err => console.error('Ошибка при шаринге:', err));
+            });
         } else {
             // Запасной вариант - просто показываем ссылку
             alert(`Ваша реферальная ссылка: ${referralLink}`);
         }
     } catch (error) {
-        console.error('Ошибка при создании реферальной ссылки:', error);
-        alert('Не удалось создать реферальную ссылку. Попробуйте позже.');
+        console.error('Ошибка при шаринге реферальной ссылки:', error);
+        alert('Произошла ошибка при создании реферальной ссылки');
     }
 }
