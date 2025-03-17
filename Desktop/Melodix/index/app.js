@@ -10,6 +10,9 @@ let rhythmMode = false;
 // Глобальная переменная для текущего активного раздела
 let currentSection = 'game-section';
 
+// Глобальный аудио контекст
+let audioContext = null;
+
 // Настройка цветов и темы для Telegram Mini App
 function setupTelegramColors() {
   try {
@@ -359,6 +362,95 @@ function handleRhythmEvent(event) {
   }
 }
 
+// Инициализация аудио контекста
+function initAudioContext() {
+    try {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            console.log('AudioContext инициализирован:', audioContext.state);
+        }
+    } catch (error) {
+        console.error('Ошибка при инициализации AudioContext:', error);
+    }
+}
+
+// Воспроизведение звука
+function playSound(pad) {
+    try {
+        // Инициализируем аудио контекст при первом взаимодействии
+        if (!audioContext) {
+            initAudioContext();
+        }
+        
+        const audio = pad.querySelector('audio');
+        const soundPath = pad.getAttribute('data-sound');
+        
+        // Проверяем, загружен ли звук
+        if (!audio.readyState) {
+            console.log('Звук еще не загружен, пробуем загрузить:', soundPath);
+            audio.load();
+        }
+        
+        // Сбрасываем воспроизведение
+        audio.currentTime = 0;
+        
+        // Пробуем воспроизвести через AudioContext
+        if (audioContext && audioContext.state === 'running') {
+            const source = audioContext.createMediaElementSource(audio);
+            source.connect(audioContext.destination);
+            audio.play()
+                .then(() => {
+                    console.log(`Звук ${soundPath} успешно воспроизведен через AudioContext`);
+                })
+                .catch(error => {
+                    console.error(`Ошибка воспроизведения через AudioContext:`, error);
+                    fallbackPlaySound(soundPath);
+                });
+        } else {
+            // Если AudioContext недоступен, используем стандартное воспроизведение
+            audio.play()
+                .then(() => {
+                    console.log(`Звук ${soundPath} успешно воспроизведен`);
+                })
+                .catch(error => {
+                    console.error(`Ошибка воспроизведения:`, error);
+                    fallbackPlaySound(soundPath);
+                });
+        }
+        
+        // Добавляем класс для анимации
+        pad.classList.add('active');
+        
+        // Удаляем класс после окончания анимации
+        setTimeout(() => {
+            pad.classList.remove('active');
+        }, 300);
+        
+        // Обновляем счет
+        updateScore(1);
+        
+    } catch (error) {
+        console.error('Ошибка в функции playSound:', error);
+        fallbackPlaySound(pad.getAttribute('data-sound'));
+    }
+}
+
+// Запасной вариант воспроизведения звука
+function fallbackPlaySound(soundPath) {
+    try {
+        const newAudio = new Audio(soundPath);
+        newAudio.load();
+        newAudio.play()
+            .then(() => console.log(`Звук ${soundPath} воспроизведен запасным способом`))
+            .catch(err => console.error(`Не удалось воспроизвести звук запасным способом:`, err));
+    } catch (error) {
+        console.error('Ошибка в запасном методе воспроизведения:', error);
+    }
+}
+
 // Создание DJ-падов
 function createDJPads() {
     // Проверяем, существует ли уже контейнер с падами
@@ -426,46 +518,18 @@ function createDJPads() {
             e.preventDefault();
             playSound(this);
         });
+        
+        // Предзагружаем звук
+        audio.load();
     });
     
     console.log('DJ-пады созданы');
-}
-
-// Воспроизведение звука
-function playSound(pad) {
-    const audio = pad.querySelector('audio');
-    const soundPath = pad.getAttribute('data-sound');
     
-    console.log(`Воспроизведение звука: ${soundPath}`);
-    
-    // Сбрасываем воспроизведение
-    audio.currentTime = 0;
-    
-    // Воспроизводим звук
-    audio.play()
-        .then(() => {
-            console.log(`Звук ${soundPath} успешно воспроизведен`);
-        })
-        .catch(error => {
-            console.error(`Ошибка воспроизведения звука ${soundPath}:`, error);
-            
-            // Пробуем альтернативный способ воспроизведения
-            const newAudio = new Audio(soundPath);
-            newAudio.play()
-                .then(() => console.log(`Звук ${soundPath} воспроизведен альтернативным способом`))
-                .catch(err => console.error(`Не удалось воспроизвести звук ${soundPath} альтернативным способом:`, err));
-        });
-    
-    // Добавляем класс для анимации
-    pad.classList.add('active');
-    
-    // Удаляем класс после окончания анимации
-    setTimeout(() => {
-        pad.classList.remove('active');
-    }, 300);
-    
-    // Обновляем счет
-    updateScore(1);
+    // Инициализируем аудио контекст при создании падов
+    document.addEventListener('touchstart', function initAudioOnFirstTouch() {
+        initAudioContext();
+        document.removeEventListener('touchstart', initAudioOnFirstTouch);
+    }, { once: true });
 }
 
 // Функция для шаринга реферальной ссылки
@@ -573,35 +637,47 @@ function fallbackCopyToClipboard(text) {
 // Функция для показа виджета Telegram для шаринга
 function showTelegramShareWidget(referralLink) {
     try {
-        // Используем Telegram Mini App API для шаринга
-        if (window.Telegram?.WebApp?.switchInlineQuery) {
-            // Подготавливаем текст для шаринга
-            const shareText = `Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы! ${referralLink}`;
-            
-            // Вызываем виджет для шаринга
-            window.Telegram.WebApp.switchInlineQuery(shareText);
-            console.log('Вызван виджет Telegram для шаринга');
-        } else if (window.Telegram?.WebApp?.openTelegramLink) {
-            // Альтернативный способ - открываем ссылку на шаринг
-            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы!')}`;
-            window.Telegram.WebApp.openTelegramLink(shareUrl);
-            console.log('Открыта ссылка на шаринг в Telegram');
-        } else if (window.Telegram?.WebApp?.showPopup) {
-            // Если нет прямых методов шаринга, показываем попап с инструкциями
-            window.Telegram.WebApp.showPopup({
-                title: 'Поделиться с друзьями',
-                message: 'Ссылка скопирована в буфер обмена. Вставьте её в чат, чтобы пригласить друзей!',
-                buttons: [
-                    {type: 'default', text: 'OK', id: 'ok'}
-                ]
+        // Используем новый метод shareMessage из Bot API 8.0+
+        if (window.Telegram?.WebApp?.shareMessage) {
+            window.Telegram.WebApp.shareMessage({
+                text: `Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы! ${referralLink}`,
+                callback: (success) => {
+                    if (success) {
+                        console.log('Сообщение успешно отправлено через shareMessage');
+                    } else {
+                        console.log('Пользователь отменил отправку сообщения');
+                        // Показываем сообщение о том, что ссылка скопирована
+                        if (window.Telegram?.WebApp?.showPopup) {
+                            window.Telegram.WebApp.showPopup({
+                                title: 'Ссылка скопирована',
+                                message: 'Вы можете вставить её в любой чат для приглашения друзей!',
+                                buttons: [{type: 'default', text: 'OK'}]
+                            });
+                        }
+                    }
+                }
             });
+        } else if (window.Telegram?.WebApp?.switchInlineQuery) {
+            // Используем старый метод как запасной вариант
+            const shareText = `Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы! ${referralLink}`;
+            window.Telegram.WebApp.switchInlineQuery(shareText);
+            console.log('Вызван виджет Telegram для шаринга через switchInlineQuery');
         } else if (navigator.share) {
-            // Используем Web Share API, если доступно
+            // Web Share API как последний запасной вариант
             navigator.share({
                 title: 'Melodix DJ Pads',
                 text: 'Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы!',
                 url: referralLink
             });
+        } else {
+            // Если ничего не доступно, просто показываем попап
+            if (window.Telegram?.WebApp?.showPopup) {
+                window.Telegram.WebApp.showPopup({
+                    title: 'Поделиться с друзьями',
+                    message: 'Ссылка скопирована в буфер обмена. Вставьте её в чат, чтобы пригласить друзей!',
+                    buttons: [{type: 'default', text: 'OK'}]
+                });
+            }
         }
     } catch (error) {
         console.error('Ошибка при вызове виджета Telegram для шаринга:', error);
