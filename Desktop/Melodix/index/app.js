@@ -41,10 +41,48 @@ function setupTelegramColors() {
       tg.requestFullscreen();
       console.log('Запрошен полноэкранный режим');
     }
+
+    // Обновляем отступы безопасных зон
+    updateSafeAreaInsets();
+    
+    // Добавляем обработчики событий для безопасных зон
+    if (tg.onEvent) {
+      tg.onEvent('safeAreaChanged', updateSafeAreaInsets);
+      tg.onEvent('contentSafeAreaChanged', updateSafeAreaInsets);
+    }
     
     console.log('Настройки Telegram успешно применены');
   } catch (error) {
     console.error('Ошибка при настройке Telegram:', error.message);
+  }
+}
+
+// Функция для обновления отступов безопасных зон
+function updateSafeAreaInsets() {
+  try {
+    if (window.Telegram?.WebApp?.safeAreaInset) {
+      const safeArea = window.Telegram.WebApp.safeAreaInset;
+      const contentSafeArea = window.Telegram.WebApp.contentSafeAreaInset;
+      
+      // Обновляем CSS-переменные
+      document.documentElement.style.setProperty('--safe-area-inset-top', `${safeArea.top}px`);
+      document.documentElement.style.setProperty('--safe-area-inset-bottom', `${safeArea.bottom}px`);
+      document.documentElement.style.setProperty('--safe-area-inset-left', `${safeArea.left}px`);
+      document.documentElement.style.setProperty('--safe-area-inset-right', `${safeArea.right}px`);
+      
+      // Обновляем отступы для контента
+      document.documentElement.style.setProperty('--content-safe-area-inset-top', `${contentSafeArea.top}px`);
+      document.documentElement.style.setProperty('--content-safe-area-inset-bottom', `${contentSafeArea.bottom}px`);
+      document.documentElement.style.setProperty('--content-safe-area-inset-left', `${contentSafeArea.left}px`);
+      document.documentElement.style.setProperty('--content-safe-area-inset-right', `${contentSafeArea.right}px`);
+      
+      console.log('Отступы безопасных зон обновлены:', {
+        safeArea,
+        contentSafeArea
+      });
+    }
+  } catch (error) {
+    console.error('Ошибка при обновлении отступов безопасных зон:', error);
   }
 }
 

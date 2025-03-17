@@ -347,7 +347,8 @@ body {
     backdrop-filter: blur(10px);
     display: flex;
     justify-content: space-around;
-    padding: 10px 0 30px; /* Увеличиваем нижний отступ на 20px */
+    padding: 10px 0;
+    padding-bottom: calc(30px + var(--safe-area-inset-bottom, 0px));
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
     z-index: 100;
 }
@@ -379,7 +380,7 @@ body {
 .section {
     display: none;
     padding: 20px;
-    padding-bottom: 70px; /* Отступ для нижнего меню */
+    padding-bottom: calc(70px + var(--safe-area-inset-bottom, 0px));
     height: 100%;
     overflow-y: auto;
 }
@@ -402,7 +403,7 @@ body {
 .section-container {
     display: none;
     padding: 20px;
-    padding-bottom: 70px; /* Отступ для нижнего меню */
+    padding-bottom: calc(70px + var(--safe-area-inset-bottom, 0px));
     height: 100%;
     overflow-y: auto;
 }
@@ -415,6 +416,7 @@ body {
 /* Стили для заголовков разделов */
 .section-header {
     padding: 20px;
+    padding-top: calc(20px + var(--safe-area-inset-top, 0px));
     text-align: center;
 }
 
@@ -427,6 +429,7 @@ body {
 /* Стили для раздела "Уроки" */
 .lessons-list {
     padding: 0 20px 20px;
+    padding-top: calc(20px + var(--safe-area-inset-top, 0px));
 }
 
 .lesson-card {
@@ -465,7 +468,8 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 40px 20px 20px;
+    padding: 20px;
+    padding-top: calc(40px + var(--safe-area-inset-top, 0px));
     height: calc(100% - 60px); /* Вычитаем высоту нижнего меню */
 }
 
@@ -532,6 +536,7 @@ body {
     -webkit-overflow-scrolling: touch;
     background: url(./images/BG.png) no-repeat center center/cover fixed #1F1F1F;
     background-blend-mode: multiply;
+    padding-top: var(--safe-area-inset-top, 0px);
 }
 
 /* Стили для реферальной системы */
@@ -543,7 +548,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 80px; /* Отступ от нижнего меню */
+    margin-bottom: calc(80px + var(--safe-area-inset-bottom, 0px));
 }
 
 .invite-button {
