@@ -675,49 +675,67 @@ function fallbackCopyToClipboard(text) {
 // Функция для показа виджета Telegram для шаринга
 function showTelegramShareWidget(referralLink) {
     try {
-        // Используем новый метод shareMessage из Bot API 8.0+
-        if (window.Telegram?.WebApp?.shareMessage) {
-            window.Telegram.WebApp.shareMessage({
-                text: `Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы! ${referralLink}`,
-                callback: (success) => {
-                    if (success) {
-                        console.log('Сообщение успешно отправлено через shareMessage');
-                    } else {
-                        console.log('Пользователь отменил отправку сообщения');
-                        // Показываем сообщение о том, что ссылка скопирована
-                        if (window.Telegram?.WebApp?.showPopup) {
-                            window.Telegram.WebApp.showPopup({
-                                title: 'Ссылка скопирована',
-                                message: 'Вы можете вставить её в любой чат для приглашения друзей!',
-                                buttons: [{type: 'default', text: 'OK'}]
-                            });
-                        }
+        if (window.Telegram?.WebApp?.MainButton) {
+            // Создаем кнопку "Поделиться"
+            const mainButton = window.Telegram.WebApp.MainButton;
+            
+            // Настраиваем кнопку
+            mainButton.setText('Поделиться с друзьями');
+            mainButton.show();
+            
+            // Добавляем обработчик нажатия
+            mainButton.onClick(() => {
+                // Используем switchInlineQuery с правильным форматом
+                const shareText = `Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы! ${referralLink}`;
+                
+                if (window.Telegram?.WebApp?.switchInlineQuery) {
+                    window.Telegram.WebApp.switchInlineQuery(shareText);
+                } else {
+                    // Если switchInlineQuery недоступен, показываем попап с кнопкой копирования
+                    if (window.Telegram?.WebApp?.showPopup) {
+                        window.Telegram.WebApp.showPopup({
+                            title: 'Поделиться с друзьями',
+                            message: 'Ссылка скопирована в буфер обмена. Вставьте её в чат, чтобы пригласить друзей!',
+                            buttons: [
+                                {type: 'default', text: 'Копировать ссылку'},
+                                {type: 'cancel', text: 'Отмена'}
+                            ],
+                            callback: (buttonId) => {
+                                if (buttonId === 0) {
+                                    copyToClipboard(referralLink);
+                                }
+                            }
+                        });
                     }
                 }
             });
-        } else if (window.Telegram?.WebApp?.switchInlineQuery) {
-            // Используем старый метод как запасной вариант
-            const shareText = `Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы! ${referralLink}`;
-            window.Telegram.WebApp.switchInlineQuery(shareText);
-            console.log('Вызван виджет Telegram для шаринга через switchInlineQuery');
-        } else if (navigator.share) {
-            // Web Share API как последний запасной вариант
-            navigator.share({
-                title: 'Melodix DJ Pads',
-                text: 'Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы!',
-                url: referralLink
-            });
         } else {
-            // Если ничего не доступно, просто показываем попап
+            // Если MainButton недоступен, используем стандартный попап
             if (window.Telegram?.WebApp?.showPopup) {
                 window.Telegram.WebApp.showPopup({
                     title: 'Поделиться с друзьями',
                     message: 'Ссылка скопирована в буфер обмена. Вставьте её в чат, чтобы пригласить друзей!',
-                    buttons: [{type: 'default', text: 'OK'}]
+                    buttons: [
+                        {type: 'default', text: 'Копировать ссылку'},
+                        {type: 'cancel', text: 'Отмена'}
+                    ],
+                    callback: (buttonId) => {
+                        if (buttonId === 0) {
+                            copyToClipboard(referralLink);
+                        }
+                    }
                 });
             }
         }
     } catch (error) {
         console.error('Ошибка при вызове виджета Telegram для шаринга:', error);
+        // В случае ошибки показываем простой попап
+        if (window.Telegram?.WebApp?.showPopup) {
+            window.Telegram.WebApp.showPopup({
+                title: 'Поделиться с друзьями',
+                message: 'Ссылка скопирована в буфер обмена. Вставьте её в чат, чтобы пригласить друзей!',
+                buttons: [{type: 'default', text: 'OK'}]
+            });
+        }
     }
 }
