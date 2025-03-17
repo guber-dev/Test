@@ -572,145 +572,35 @@ function createDJPads() {
 
 // Функция для шаринга реферальной ссылки
 function shareReferralLink() {
-    // Проверяем, доступна ли реферальная система
-    if (window.referralSystem) {
-        // Получаем ссылку из реферальной системы
-        const referralLink = window.referralSystem.getReferralLink();
-        
-        if (referralLink) {
-            // Копируем ссылку в буфер обмена
-            copyToClipboard(referralLink);
-            
-            // Показываем виджет Telegram для шаринга
-            showTelegramShareWidget(referralLink);
-        } else {
-            // Если не удалось получить ссылку, используем запасной вариант
-            fallbackShareReferral();
-        }
-    } else {
-        fallbackShareReferral();
-    }
-}
-
-// Запасной вариант для шаринга реферальной ссылки
-function fallbackShareReferral() {
     try {
-        // Получаем данные пользователя из Telegram
-        const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-        if (!telegramUser) {
-            console.warn('Данные пользователя Telegram недоступны');
-            alert('Не удалось получить данные пользователя для создания реферальной ссылки');
+        // Получаем реферальную ссылку
+        const referralLink = window.referralSystem?.getReferralLink();
+        if (!referralLink) {
+            console.warn('Не удалось получить реферальную ссылку');
             return;
         }
-        
-        // Генерируем простой реферальный код
-        const userId = telegramUser.id;
-        const timestamp = Date.now();
-        const referralCode = `ref_${userId}_${timestamp}`;
-        
-        // Создаем реферальную ссылку
-        const referralLink = `https://t.me/MelodixCryptoBot/app?ref=${referralCode}`;
-        
-        console.log('Сгенерирована реферальная ссылка:', referralLink);
-        
-        // Копируем ссылку в буфер обмена
-        copyToClipboard(referralLink);
-        
-        // Показываем виджет Telegram для шаринга
-        showTelegramShareWidget(referralLink);
-    } catch (error) {
-        console.error('Ошибка при шаринге реферальной ссылки:', error);
-        alert('Произошла ошибка при создании реферальной ссылки');
-    }
-}
 
-// Функция для копирования текста в буфер обмена
-function copyToClipboard(text) {
-    try {
-        navigator.clipboard.writeText(text)
-            .then(() => {
-                console.log('Ссылка скопирована в буфер обмена');
-                // Показываем уведомление о копировании
-                if (window.Telegram?.WebApp?.showPopup) {
-                    window.Telegram.WebApp.showAlert('Ссылка скопирована в буфер обмена!');
-                }
-            })
-            .catch(err => {
-                console.error('Ошибка при копировании в буфер обмена:', err);
-                // Пробуем альтернативный метод копирования
-                fallbackCopyToClipboard(text);
-            });
-    } catch (error) {
-        console.error('Ошибка при копировании в буфер обмена:', error);
-        fallbackCopyToClipboard(text);
-    }
-}
-
-// Запасной вариант копирования в буфер обмена
-function fallbackCopyToClipboard(text) {
-    try {
-        // Создаем временный элемент input
-        const tempInput = document.createElement('input');
-        tempInput.style.position = 'absolute';
-        tempInput.style.left = '-1000px';
-        tempInput.value = text;
-        document.body.appendChild(tempInput);
-        
-        // Выделяем и копируем текст
-        tempInput.select();
-        document.execCommand('copy');
-        
-        // Удаляем временный элемент
-        document.body.removeChild(tempInput);
-        
-        console.log('Ссылка скопирована альтернативным способом');
-        if (window.Telegram?.WebApp?.showPopup) {
-            window.Telegram.WebApp.showAlert('Ссылка скопирована в буфер обмена!');
-        }
-    } catch (error) {
-        console.error('Не удалось скопировать ссылку альтернативным способом:', error);
-    }
-}
-
-// Функция для показа виджета Telegram для шаринга
-function showTelegramShareWidget(referralLink) {
-    try {
+        // Используем метод shareMessage для показа нативного диалога шаринга
         if (window.Telegram?.WebApp?.shareMessage) {
-            // Формируем объект для шаринга
-            const shareData = {
-                text: `Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы! ${referralLink}`,
-                share_game: true // Это включит селектор чатов
+            const messageData = {
+                text: `🎵 Присоединяйся к Melodix DJ Pads!\n\n🎮 Создавай музыку и зарабатывай бонусы!\n\n🔗 ${referralLink}`,
+                parse_mode: 'HTML'
             };
             
-            // Вызываем нативный метод шаринга
-            window.Telegram.WebApp.shareMessage(shareData);
+            window.Telegram.WebApp.shareMessage(messageData);
         } else {
             // Запасной вариант, если shareMessage недоступен
             if (window.Telegram?.WebApp?.showPopup) {
                 window.Telegram.WebApp.showPopup({
                     title: 'Поделиться с друзьями',
                     message: 'Ссылка скопирована в буфер обмена. Вставьте её в чат, чтобы пригласить друзей!',
-                    buttons: [
-                        {type: 'default', text: 'Копировать ссылку'},
-                        {type: 'cancel', text: 'Отмена'}
-                    ],
-                    callback: (buttonId) => {
-                        if (buttonId === 0) {
-                            copyToClipboard(referralLink);
-                        }
-                    }
+                    buttons: [{type: 'default', text: 'OK'}]
                 });
+                // Копируем ссылку в буфер обмена
+                navigator.clipboard.writeText(referralLink);
             }
         }
     } catch (error) {
-        console.error('Ошибка при вызове виджета Telegram для шаринга:', error);
-        // В случае ошибки показываем простой попап
-        if (window.Telegram?.WebApp?.showPopup) {
-            window.Telegram.WebApp.showPopup({
-                title: 'Поделиться с друзьями',
-                message: 'Ссылка скопирована в буфер обмена. Вставьте её в чат, чтобы пригласить друзей!',
-                buttons: [{type: 'default', text: 'OK'}]
-            });
-        }
+        console.error('Ошибка при шаринге:', error);
     }
 }
