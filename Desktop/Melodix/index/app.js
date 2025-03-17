@@ -675,42 +675,14 @@ function fallbackCopyToClipboard(text) {
 // Функция для показа виджета Telegram для шаринга
 function showTelegramShareWidget(referralLink) {
     try {
-        if (window.Telegram?.WebApp?.MainButton) {
-            // Создаем кнопку "Поделиться"
-            const mainButton = window.Telegram.WebApp.MainButton;
+        if (window.Telegram?.WebApp?.switchInlineQuery) {
+            // Формируем текст для шаринга
+            const shareText = `Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы! ${referralLink}`;
             
-            // Настраиваем кнопку
-            mainButton.setText('Поделиться с друзьями');
-            mainButton.show();
-            
-            // Добавляем обработчик нажатия
-            mainButton.onClick(() => {
-                // Используем switchInlineQuery с правильным форматом
-                const shareText = `Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы! ${referralLink}`;
-                
-                if (window.Telegram?.WebApp?.switchInlineQuery) {
-                    window.Telegram.WebApp.switchInlineQuery(shareText);
-                } else {
-                    // Если switchInlineQuery недоступен, показываем попап с кнопкой копирования
-                    if (window.Telegram?.WebApp?.showPopup) {
-                        window.Telegram.WebApp.showPopup({
-                            title: 'Поделиться с друзьями',
-                            message: 'Ссылка скопирована в буфер обмена. Вставьте её в чат, чтобы пригласить друзей!',
-                            buttons: [
-                                {type: 'default', text: 'Копировать ссылку'},
-                                {type: 'cancel', text: 'Отмена'}
-                            ],
-                            callback: (buttonId) => {
-                                if (buttonId === 0) {
-                                    copyToClipboard(referralLink);
-                                }
-                            }
-                        });
-                    }
-                }
-            });
+            // Вызываем нативный интерфейс выбора чатов
+            window.Telegram.WebApp.switchInlineQuery(shareText, ['users', 'groups', 'channels']);
         } else {
-            // Если MainButton недоступен, используем стандартный попап
+            // Запасной вариант, если switchInlineQuery недоступен
             if (window.Telegram?.WebApp?.showPopup) {
                 window.Telegram.WebApp.showPopup({
                     title: 'Поделиться с друзьями',
