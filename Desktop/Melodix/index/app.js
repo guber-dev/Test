@@ -33,10 +33,24 @@ function setupTelegramColors() {
       tg.requestViewport();
     }
     
+    // Запрашиваем полноэкранный режим (Bot API 8.0+)
+    if (tg.requestFullscreen) {
+      tg.requestFullscreen();
+      console.log('Запрошен полноэкранный режим');
+    }
+    
     console.log('Настройки Telegram успешно применены');
   } catch (error) {
     console.error('Ошибка при настройке Telegram:', error.message);
   }
+}
+
+// Функция для выхода из полноэкранного режима
+function exitFullscreenMode() {
+    if (window.Telegram?.WebApp?.exitFullscreen) {
+        window.Telegram.WebApp.exitFullscreen();
+        console.log('Выход из полноэкранного режима');
+    }
 }
 
 // Переключение между секциями
@@ -177,7 +191,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Инициализация Telegram Mini App
     if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
+        // Запрашиваем полноэкранный режим после инициализации
+        setupTelegramColors();
     }
     
     // Создаем DJ-пады
