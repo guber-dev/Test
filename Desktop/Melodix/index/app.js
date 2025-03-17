@@ -675,14 +675,17 @@ function fallbackCopyToClipboard(text) {
 // Функция для показа виджета Telegram для шаринга
 function showTelegramShareWidget(referralLink) {
     try {
-        if (window.Telegram?.WebApp?.switchInlineQuery) {
-            // Формируем текст для шаринга
-            const shareText = `Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы! ${referralLink}`;
+        if (window.Telegram?.WebApp?.shareMessage) {
+            // Формируем объект для шаринга
+            const shareData = {
+                text: `Присоединяйся к Melodix DJ Pads! Создавай музыку и зарабатывай бонусы! ${referralLink}`,
+                share_game: true // Это включит селектор чатов
+            };
             
-            // Вызываем нативный интерфейс выбора чатов
-            window.Telegram.WebApp.switchInlineQuery(shareText, ['users', 'groups', 'channels']);
+            // Вызываем нативный метод шаринга
+            window.Telegram.WebApp.shareMessage(shareData);
         } else {
-            // Запасной вариант, если switchInlineQuery недоступен
+            // Запасной вариант, если shareMessage недоступен
             if (window.Telegram?.WebApp?.showPopup) {
                 window.Telegram.WebApp.showPopup({
                     title: 'Поделиться с друзьями',
