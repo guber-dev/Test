@@ -133,7 +133,6 @@ body {
 @media (max-width: 768px) {
     .pads-container {
         width: calc(100% - 34px); /* Учитываем отступы по бокам */
-        height: 60vh;
         gap: 6px;
         padding: 17px;
     }
@@ -403,15 +402,21 @@ body {
 /* Стили для контейнеров разделов */
 .section-container {
     display: none;
-    padding: 20px;
-    padding-bottom: calc(70px + var(--safe-area-inset-bottom, 0px));
-    height: 100%;
+    min-height: 100%;
+    height: auto;
     overflow-y: auto;
 }
 
 .section-container.active {
     display: block;
     animation: fadeIn 0.3s ease forwards;
+}
+
+/* Добавляем медиа-запрос для очень высоких экранов */
+@media screen and (min-height: 1000px) {
+    .section-container {
+        padding-bottom: calc(20px + var(--safe-area-inset-bottom, 0px));
+    }
 }
 
 /* Стили для заголовков разделов */
@@ -471,7 +476,8 @@ body {
     align-items: center;
     padding: 20px;
     padding-top: calc(40px + var(--safe-area-inset-top, 0px));
-    height: calc(100% - 60px); /* Вычитаем высоту нижнего меню */
+    min-height: calc(100vh - 60px - var(--safe-area-inset-bottom, 0px));
+    height: auto;
 }
 
 .profile-avatar {
@@ -528,11 +534,11 @@ body {
 
 /* Обновляем стили для контейнера приложения */
 .app-container {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    bottom: 60px; /* Оставляем место для нижнего меню */
+    bottom: 60px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     background: url(./images/BG.png) no-repeat center center/cover fixed #1F1F1F;
@@ -549,7 +555,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: calc(120px + var(--safe-area-inset-bottom, 0px));
+    margin-bottom: calc(20px + var(--safe-area-inset-bottom, 0px));
 }
 
 .invite-button {

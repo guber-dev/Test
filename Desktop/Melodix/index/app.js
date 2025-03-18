@@ -571,8 +571,15 @@ function createDJPads() {
 }
 
 // Функция для шаринга реферальной ссылки
-function shareReferralLink() {
+async function shareReferralLink() {
     try {
+        // Получаем данные пользователя из Telegram
+        const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+        if (!telegramUser) {
+            console.warn('Данные пользователя Telegram недоступны');
+            return;
+        }
+
         // Получаем реферальную ссылку
         const referralLink = window.referralSystem?.getReferralLink();
         if (!referralLink) {
@@ -580,27 +587,50 @@ function shareReferralLink() {
             return;
         }
 
-        // Используем метод shareMessage для показа нативного диалога шаринга
+        // Получаем prepared_message_id от сервера
+        const response = await fetch('https://your-server.com/api/prepare-share-message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user_id: telegramUser.id,
+                referral_link: referralLink
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to prepare share message');
+        }
+
+        const { prepared_message_id } = await response.json();
+
+        // Используем полученный prepared_message_id для шаринга
         if (window.Telegram?.WebApp?.shareMessage) {
-            const messageData = {
-                text: `🎵 Присоединяйся к Melodix DJ Pads!\n\n🎮 Создавай музыку и зарабатывай бонусы!\n\n🔗 ${referralLink}`,
-                parse_mode: 'HTML'
-            };
-            
-            window.Telegram.WebApp.shareMessage(messageData);
+            window.Telegram.WebApp.shareMessage(prepared_message_id, (success) => {
+                if (!success) {
+                    console.warn('Не удалось отправить сообщение');
+                    showFallbackSharePopup(referralLink);
+                }
+            });
         } else {
-            // Запасной вариант, если shareMessage недоступен
-            if (window.Telegram?.WebApp?.showPopup) {
-                window.Telegram.WebApp.showPopup({
-                    title: 'Поделиться с друзьями',
-                    message: 'Ссылка скопирована в буфер обмена. Вставьте её в чат, чтобы пригласить друзей!',
-                    buttons: [{type: 'default', text: 'OK'}]
-                });
-                // Копируем ссылку в буфер обмена
-                navigator.clipboard.writeText(referralLink);
-            }
+            showFallbackSharePopup(referralLink);
         }
     } catch (error) {
         console.error('Ошибка при шаринге:', error);
+        showFallbackSharePopup(referralLink);
+    }
+}
+
+// Функция для показа запасного варианта шаринга
+function showFallbackSharePopup(referralLink) {
+    if (window.Telegram?.WebApp?.showPopup) {
+        window.Telegram.WebApp.showPopup({
+            title: 'Поделиться с друзьями',
+            message: 'Ссылка скопирована в буфер обмена. Вставьте её в чат, чтобы пригласить друзей!',
+            buttons: [{type: 'default', text: 'OK'}]
+        });
+        // Копируем ссылку в буфер обмена
+        navigator.clipboard.writeText(referralLink);
     }
 }
