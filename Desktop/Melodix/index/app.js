@@ -17,10 +17,6 @@ let audioContext = null;
 let mediaRecorder;
 let recordedChunks = [];
 
-// Импортируем dotenv для загрузки переменных окружения
-import dotenv from 'dotenv';
-dotenv.config();
-
 // Настройка цветов и темы для Telegram Mini App
 function setupTelegramColors() {
   try {
@@ -237,32 +233,76 @@ function loadUserData() {
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
-    // Инициализация Telegram Mini App
-    if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.ready();
-        // Запрашиваем полноэкранный режим после инициализации
-        setupTelegramColors();
+    try {
+        console.log('DOM загружен, начинаем инициализацию приложения');
+        
+        // Инициализация Telegram Mini App
+        if (window.Telegram && window.Telegram.WebApp) {
+            console.log('Telegram WebApp API доступен');
+            window.Telegram.WebApp.ready();
+            // Запрашиваем полноэкранный режим после инициализации
+            setupTelegramColors();
+        } else {
+            console.warn('Telegram WebApp API недоступен');
+        }
+        
+        // Инициализируем аудио контекст
+        initAudioContext();
+        
+        // Создаем DJ-пады - самое важное
+        const padsCreated = createDJPads();
+        if (!padsCreated) {
+            console.error('Не удалось создать DJ-пады');
+        }
+        
+        // Добавляем дополнительные функции, только если пады созданы
+        if (padsCreated) {
+            // Создаем интерфейс записи
+            try {
+                createRecordingInterface();
+            } catch (e) {
+                console.error('Ошибка при создании интерфейса записи:', e);
+            }
+            
+            // Инициализируем обработчики меню
+            try {
+                if (typeof initMenuHandlers === 'function') {
+                    initMenuHandlers();
+                }
+            } catch (e) {
+                console.error('Ошибка при инициализации обработчиков меню:', e);
+            }
+            
+            // Загружаем данные пользователя
+            try {
+                if (typeof loadUserData === 'function') {
+                    loadUserData();
+                }
+            } catch (e) {
+                console.error('Ошибка при загрузке данных пользователя:', e);
+            }
+            
+            // Показываем секцию игры по умолчанию
+            try {
+                if (typeof switchSection === 'function') {
+                    switchSection('game-section');
+                }
+            } catch (e) {
+                console.error('Ошибка при переключении секции:', e);
+            }
+        }
+        
+        // Предотвращаем случайное закрытие - важно для UX
+        try {
+            preventAccidentalClose();
+        } catch (e) {
+            console.error('Ошибка при настройке предотвращения закрытия:', e);
+        }
+        
+        console.log('Приложение инициализировано');
+    } catch (error) {
+        console.error('Критическая ошибка при инициализации приложения:', error);
     }
-    
-    // Создаем DJ-пады
-    createDJPads();
-    
-    // Создаем интерфейс записи
-    createRecordingInterface();
-    
-    // Инициализируем обработчики меню
-    initMenuHandlers();
-    
-    // Предотвращаем случайное закрытие
-    preventAccidentalClose();
-    
-    // Загружаем данные пользователя
-    loadUserData();
-    
-    // Показываем секцию игры по умолчанию
-    switchSection('game-section');
-    
-    console.log('Приложение инициализировано');
 });
 
 // Инициализация обработчиков меню
@@ -297,51 +337,64 @@ function initMenuHandlers() {
 
 // Функция для создания интерфейса режима ритма
 function createRhythmInterface() {
-  // Создаем контейнер для кнопок режима ритма
-  const rhythmControls = document.createElement('div');
-  rhythmControls.className = 'rhythm-controls';
-  
-  // Кнопка для переключения режима
-  const toggleButton = document.createElement('button');
-  toggleButton.className = 'rhythm-toggle';
-  toggleButton.textContent = 'Режим ритма';
-  toggleButton.addEventListener('click', toggleRhythmMode);
-  
-  // Контейнер для выбора паттерна
-  const patternSelector = document.createElement('div');
-  patternSelector.className = 'pattern-selector';
-  
-  // Создаем выпадающий список с паттернами
-  const patternSelect = document.createElement('select');
-  patternSelect.id = 'pattern-select';
-  
-  // Добавляем опции для каждого паттерна
-  const patterns = Object.keys(window.rhythmManager.patterns);
-  patterns.forEach(pattern => {
-    const option = document.createElement('option');
-    option.value = pattern;
-    option.textContent = pattern.charAt(0).toUpperCase() + pattern.slice(1);
-    patternSelect.appendChild(option);
-  });
-  
-  // Кнопка для запуска паттерна
-  const startButton = document.createElement('button');
-  startButton.className = 'rhythm-start';
-  startButton.textContent = 'Старт';
-  startButton.disabled = true;
-  startButton.addEventListener('click', startRhythmPattern);
-  
-  // Добавляем элементы в контейнеры
-  patternSelector.appendChild(patternSelect);
-  rhythmControls.appendChild(toggleButton);
-  rhythmControls.appendChild(patternSelector);
-  rhythmControls.appendChild(startButton);
-  
-  // Добавляем контейнер на страницу
-  document.querySelector('#game-section').appendChild(rhythmControls);
-  
-  // Добавляем слушателя событий для менеджера ритма
-  window.rhythmManager.addListener(handleRhythmEvent);
+  try {
+    // Проверяем, существует ли rhythmManager
+    if (!window.rhythmManager || !window.rhythmManager.patterns) {
+      console.warn('rhythmManager не найден или не инициализирован');
+      return;
+    }
+    
+    // Создаем контейнер для кнопок режима ритма
+    const rhythmControls = document.createElement('div');
+    rhythmControls.className = 'rhythm-controls';
+    
+    // Кнопка для переключения режима
+    const toggleButton = document.createElement('button');
+    toggleButton.className = 'rhythm-toggle';
+    toggleButton.textContent = 'Режим ритма';
+    toggleButton.addEventListener('click', toggleRhythmMode);
+    
+    // Контейнер для выбора паттерна
+    const patternSelector = document.createElement('div');
+    patternSelector.className = 'pattern-selector';
+    
+    // Создаем выпадающий список с паттернами
+    const patternSelect = document.createElement('select');
+    patternSelect.id = 'pattern-select';
+    
+    // Добавляем опции для каждого паттерна
+    const patterns = Object.keys(window.rhythmManager.patterns);
+    patterns.forEach(pattern => {
+      const option = document.createElement('option');
+      option.value = pattern;
+      option.textContent = pattern.charAt(0).toUpperCase() + pattern.slice(1);
+      patternSelect.appendChild(option);
+    });
+    
+    // Кнопка для запуска паттерна
+    const startButton = document.createElement('button');
+    startButton.className = 'rhythm-start';
+    startButton.textContent = 'Старт';
+    startButton.disabled = true;
+    startButton.addEventListener('click', startRhythmPattern);
+    
+    // Добавляем элементы в контейнеры
+    patternSelector.appendChild(patternSelect);
+    rhythmControls.appendChild(toggleButton);
+    rhythmControls.appendChild(patternSelector);
+    rhythmControls.appendChild(startButton);
+    
+    // Добавляем контейнер на страницу
+    const gameSection = document.querySelector('#game-section');
+    if (gameSection) {
+      gameSection.appendChild(rhythmControls);
+      
+      // Добавляем слушателя событий для менеджера ритма
+      window.rhythmManager.addListener(handleRhythmEvent);
+    }
+  } catch (error) {
+    console.error('Ошибка при создании интерфейса ритма:', error);
+  }
 }
 
 // Функция для переключения режима ритма
@@ -435,6 +488,11 @@ function playSound(pad) {
         }
         
         const audio = pad.querySelector('audio');
+        if (!audio) {
+            console.error('Аудио элемент не найден в паде');
+            return;
+        }
+        
         const soundPath = pad.getAttribute('data-sound');
         
         // Проверяем, загружен ли звук
@@ -446,29 +504,15 @@ function playSound(pad) {
         // Сбрасываем воспроизведение
         audio.currentTime = 0;
         
-        // Пробуем воспроизвести через AudioContext
-        if (audioContext && audioContext.state === 'running') {
-            const source = audioContext.createMediaElementSource(audio);
-            source.connect(audioContext.destination);
-            audio.play()
-                .then(() => {
-                    console.log(`Звук ${soundPath} успешно воспроизведен через AudioContext`);
-                })
-                .catch(error => {
-                    console.error(`Ошибка воспроизведения через AudioContext:`, error);
-                    fallbackPlaySound(soundPath);
-                });
-        } else {
-            // Если AudioContext недоступен, используем стандартное воспроизведение
-            audio.play()
-                .then(() => {
-                    console.log(`Звук ${soundPath} успешно воспроизведен`);
-                })
-                .catch(error => {
-                    console.error(`Ошибка воспроизведения:`, error);
-                    fallbackPlaySound(soundPath);
-                });
-        }
+        // Пробуем воспроизвести обычным способом
+        audio.play()
+            .then(() => {
+                console.log(`Звук ${soundPath} успешно воспроизведен`);
+            })
+            .catch(error => {
+                console.error(`Ошибка воспроизведения:`, error);
+                fallbackPlaySound(soundPath);
+            });
         
         // Добавляем класс для анимации
         pad.classList.add('active');
@@ -478,12 +522,26 @@ function playSound(pad) {
             pad.classList.remove('active');
         }, 300);
         
-        // Обновляем счет
-        updateScore(1);
+        // Обновляем счет, если функция существует
+        if (typeof updateScore === 'function') {
+            try {
+                updateScore(1);
+            } catch (e) {
+                console.warn('Ошибка при обновлении счета:', e);
+            }
+        }
         
     } catch (error) {
         console.error('Ошибка в функции playSound:', error);
-        fallbackPlaySound(pad.getAttribute('data-sound'));
+        // Пробуем запасной вариант воспроизведения
+        try {
+            const soundPath = pad.getAttribute('data-sound');
+            if (soundPath) {
+                fallbackPlaySound(soundPath);
+            }
+        } catch (e) {
+            console.error('Ошибка в запасном воспроизведении:', e);
+        }
     }
 }
 
@@ -502,88 +560,113 @@ function fallbackPlaySound(soundPath) {
 
 // Создание DJ-падов
 function createDJPads() {
-    // Проверяем, существует ли уже контейнер с падами
-    if (document.querySelector('#game-section .pads-container')) {
-        return; // Пады уже созданы
+    try {
+        console.log('Начинаем создание DJ-падов');
+        
+        // Проверяем, существует ли секция игры
+        const gameSection = document.getElementById('game-section');
+        if (!gameSection) {
+            console.error('Секция игры #game-section не найдена');
+            return;
+        }
+        
+        // Проверяем, существует ли уже контейнер с падами
+        if (document.querySelector('#game-section .pads-container')) {
+            console.log('Пады уже созданы');
+            return; // Пады уже созданы
+        }
+        
+        // Создаем контейнер для падов
+        const padsContainer = document.createElement('div');
+        padsContainer.className = 'pads-container';
+        
+        // Добавляем контейнер в секцию игры
+        gameSection.appendChild(padsContainer);
+        console.log('Контейнер для падов добавлен в DOM');
+        
+        // Определяем звуки и их метки
+        const sounds = [
+            { src: './sounds/Kick.mp3', label: 'Kick' },
+            { src: './sounds/Snare01.mp3', label: 'Snare' },
+            { src: './sounds/Hat.mp3', label: 'Hi-Hat' },
+            { src: './sounds/Rim.mp3', label: 'Rim' },
+            { src: './sounds/TomF.mp3', label: 'Tom' },
+            { src: './sounds/Crash01.mp3', label: 'Crash' },
+            { src: './sounds/Hat_Open.mp3', label: 'Open Hat' },
+            { src: './sounds/Crash_02.mp3', label: 'Crash 2' },
+            { src: './sounds/Ride01.mp3', label: 'Ride' },
+            { src: './sounds/Ride02.mp3', label: 'Ride 2' },
+            { src: './sounds/TomL.mp3', label: 'Tom L' },
+            { src: './sounds/Shake.mp3', label: 'Shake' }
+        ];
+        
+        console.log(`Подготовлено ${sounds.length} звуков для создания падов`);
+        
+        // Создаем пады для каждого звука
+        sounds.forEach((sound, index) => {
+            try {
+                // Создаем элемент пада
+                const pad = document.createElement('div');
+                pad.className = 'pad';
+                pad.setAttribute('data-sound', sound.src);
+                pad.setAttribute('data-index', index);
+                
+                // Создаем аудио элемент
+                const audio = document.createElement('audio');
+                audio.src = sound.src;
+                audio.preload = 'auto';
+                
+                // Добавляем обработчик ошибок для аудио
+                audio.addEventListener('error', function(e) {
+                    console.error(`Ошибка загрузки звука ${sound.src}:`, e);
+                });
+                
+                // Создаем метку для пада
+                const label = document.createElement('div');
+                label.className = 'pad-label';
+                label.textContent = sound.label;
+                
+                // Добавляем элементы в DOM
+                pad.appendChild(audio);
+                pad.appendChild(label);
+                padsContainer.appendChild(pad);
+                
+                // Добавляем обработчики событий
+                pad.addEventListener('click', function() {
+                    playSound(this);
+                });
+                
+                pad.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    playSound(this);
+                });
+                
+                // Предзагружаем звук
+                audio.load();
+            } catch (error) {
+                console.error(`Ошибка при создании пада ${index}:`, error);
+            }
+        });
+        
+        console.log('DJ-пады успешно созданы');
+        
+        // Инициализируем аудио контекст при создании падов
+        document.addEventListener('touchstart', function initAudioOnFirstTouch() {
+            initAudioContext();
+            document.removeEventListener('touchstart', initAudioOnFirstTouch);
+        }, { once: true });
+        
+        return true;
+    } catch (error) {
+        console.error('Ошибка при создании DJ-падов:', error);
+        return false;
     }
-    
-    // Создаем контейнер для падов
-    const padsContainer = document.createElement('div');
-    padsContainer.className = 'pads-container';
-    
-    // Добавляем контейнер в секцию игры
-    document.getElementById('game-section').appendChild(padsContainer);
-    
-    // Определяем звуки и их метки
-    const sounds = [
-        { src: './sounds/Kick.mp3', label: 'Kick' },
-        { src: './sounds/Snare01.mp3', label: 'Snare' },
-        { src: './sounds/Hat.mp3', label: 'Hi-Hat' },
-        { src: './sounds/Rim.mp3', label: 'Rim' },
-        { src: './sounds/TomF.mp3', label: 'Tom' },
-        { src: './sounds/Crash01.mp3', label: 'Crash' },
-        { src: './sounds/Hat_Open.mp3', label: 'Open Hat' },
-        { src: './sounds/Crash_02.mp3', label: 'Crash 2' },
-        { src: './sounds/Ride01.mp3', label: 'Ride' },
-        { src: './sounds/Ride02.mp3', label: 'Ride 2' },
-        { src: './sounds/TomL.mp3', label: 'Tom L' },
-        { src: './sounds/Shake.mp3', label: 'Shake' }
-    ];
-    
-    // Создаем пады для каждого звука
-    sounds.forEach((sound, index) => {
-        // Создаем элемент пада
-        const pad = document.createElement('div');
-        pad.className = 'pad';
-        pad.setAttribute('data-sound', sound.src);
-        pad.setAttribute('data-index', index);
-        
-        // Создаем аудио элемент
-        const audio = document.createElement('audio');
-        audio.src = sound.src;
-        audio.preload = 'auto';
-        
-        // Добавляем обработчик ошибок для аудио
-        audio.addEventListener('error', function(e) {
-            console.error(`Ошибка загрузки звука ${sound.src}:`, e);
-        });
-        
-        // Создаем метку для пада
-        const label = document.createElement('div');
-        label.className = 'pad-label';
-        label.textContent = sound.label;
-        
-        // Добавляем элементы в DOM
-        pad.appendChild(audio);
-        pad.appendChild(label);
-        padsContainer.appendChild(pad);
-        
-        // Добавляем обработчики событий
-        pad.addEventListener('click', function() {
-            playSound(this);
-        });
-        
-        pad.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            playSound(this);
-        });
-        
-        // Предзагружаем звук
-        audio.load();
-    });
-    
-    console.log('DJ-пады созданы');
-    
-    // Инициализируем аудио контекст при создании падов
-    document.addEventListener('touchstart', function initAudioOnFirstTouch() {
-        initAudioContext();
-        document.removeEventListener('touchstart', initAudioOnFirstTouch);
-    }, { once: true });
 }
 
 // Функция для шаринга реферальной ссылки
 async function shareReferralLink() {
     try {
+        console.log('Попытка шаринга реферальной ссылки');
         // Получаем данные пользователя из Telegram
         const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
         if (!telegramUser) {
@@ -592,57 +675,26 @@ async function shareReferralLink() {
         }
 
         // Получаем реферальную ссылку
-        const referralLink = window.referralSystem?.getReferralLink();
-        if (!referralLink) {
-            console.warn('Не удалось получить реферальную ссылку');
-            return;
-        }
+        // Если referralSystem недоступен, используем заглушку
+        const referralLink = window.referralSystem?.getReferralLink() || 'https://t.me/your_bot?start=12345';
+        console.log('Реферальная ссылка:', referralLink);
 
-        // Получаем prepared_message_id от сервера
-        const response = await fetch('https://your-server.com/api/prepare-share-message', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                user_id: telegramUser.id,
-                referral_link: referralLink
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to prepare share message');
-        }
-
-        const { prepared_message_id } = await response.json();
-
-        // Используем полученный prepared_message_id для шаринга
-        if (window.Telegram?.WebApp?.shareMessage) {
-            window.Telegram.WebApp.shareMessage(prepared_message_id, (success) => {
-                if (!success) {
-                    console.warn('Не удалось отправить сообщение');
-                    showFallbackSharePopup(referralLink);
-                }
+        // Показываем сообщение пользователю
+        if (window.Telegram?.WebApp?.showPopup) {
+            window.Telegram.WebApp.showPopup({
+                title: 'Поделиться с друзьями',
+                message: 'Ссылка скопирована в буфер обмена. Вставьте её в чат, чтобы пригласить друзей!',
+                buttons: [{type: 'default', text: 'OK'}]
             });
-        } else {
-            showFallbackSharePopup(referralLink);
+            
+            // Копируем ссылку в буфер обмена
+            navigator.clipboard.writeText(referralLink).catch(e => {
+                console.error('Не удалось скопировать ссылку:', e);
+            });
         }
     } catch (error) {
         console.error('Ошибка при шаринге:', error);
-        showFallbackSharePopup(referralLink);
-    }
-}
-
-// Функция для показа запасного варианта шаринга
-function showFallbackSharePopup(referralLink) {
-    if (window.Telegram?.WebApp?.showPopup) {
-        window.Telegram.WebApp.showPopup({
-            title: 'Поделиться с друзьями',
-            message: 'Ссылка скопирована в буфер обмена. Вставьте её в чат, чтобы пригласить друзей!',
-            buttons: [{type: 'default', text: 'OK'}]
-        });
-        // Копируем ссылку в буфер обмена
-        navigator.clipboard.writeText(referralLink);
+        // Не делаем ничего, просто логируем ошибку
     }
 }
 
