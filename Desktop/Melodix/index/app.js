@@ -13,6 +13,14 @@ let currentSection = 'game-section';
 // Глобальный аудио контекст
 let audioContext = null;
 
+// Глобальные переменные для записи
+let mediaRecorder;
+let recordedChunks = [];
+
+// Импортируем dotenv для загрузки переменных окружения
+import dotenv from 'dotenv';
+dotenv.config();
+
 // Настройка цветов и темы для Telegram Mini App
 function setupTelegramColors() {
   try {
@@ -238,6 +246,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Создаем DJ-пады
     createDJPads();
+    
+    // Создаем интерфейс записи
+    createRecordingInterface();
     
     // Инициализируем обработчики меню
     initMenuHandlers();
@@ -632,5 +643,252 @@ function showFallbackSharePopup(referralLink) {
         });
         // Копируем ссылку в буфер обмена
         navigator.clipboard.writeText(referralLink);
+    }
+}
+
+// Функция для создания интерфейса записи
+function createRecordingInterface() {
+    // Создаем контейнер для кнопок записи
+    const recordingControls = document.createElement('div');
+    recordingControls.className = 'recording-controls';
+    
+    // Кнопка для начала записи
+    const startRecordButton = document.createElement('button');
+    startRecordButton.className = 'record-button start';
+    startRecordButton.textContent = 'Начать запись';
+    startRecordButton.addEventListener('click', startRecording);
+    
+    // Кнопка для остановки записи
+    const stopRecordButton = document.createElement('button');
+    stopRecordButton.className = 'record-button stop';
+    stopRecordButton.textContent = 'Остановить запись';
+    stopRecordButton.style.display = 'none';
+    stopRecordButton.addEventListener('click', stopRecording);
+    
+    // Добавляем элементы в контейнер
+    recordingControls.appendChild(startRecordButton);
+    recordingControls.appendChild(stopRecordButton);
+    
+    // Добавляем контейнер на страницу
+    document.querySelector('#game-section').appendChild(recordingControls);
+    
+    return { startRecordButton, stopRecordButton };
+}
+
+// Функция для начала записи
+function startRecording() {
+    // Инициализируем аудио контекст, если он еще не инициализирован
+    if (!audioContext) {
+        initAudioContext();
+    }
+    
+    // Проверяем поддержку MediaRecorder
+    if (!window.MediaRecorder) {
+        console.error('MediaRecorder не поддерживается в этом браузере');
+        if (window.Telegram?.WebApp?.showAlert) {
+            window.Telegram.WebApp.showAlert('К сожалению, запись не поддерживается в вашем браузере.');
+        }
+        return;
+    }
+    
+    try {
+        // Создаем узел назначения для записи
+        const dest = audioContext.createMediaStreamDestination();
+        
+        // Подключаем все звуки к узлу записи
+        document.querySelectorAll('.pad audio').forEach(audioElement => {
+            const source = audioContext.createMediaElementSource(audioElement);
+            source.connect(dest);
+            source.connect(audioContext.destination); // Чтобы звук был слышен во время записи
+        });
+        
+        // Инициализируем MediaRecorder
+        mediaRecorder = new MediaRecorder(dest.stream, { mimeType: 'audio/webm' });
+        recordedChunks = [];
+        
+        // Обработчик для сбора данных
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
+        
+        // Обработчик окончания записи
+        mediaRecorder.onstop = handleRecordingStopped;
+        
+        // Начинаем запись
+        mediaRecorder.start();
+        
+        // Обновляем интерфейс
+        const startButton = document.querySelector('.record-button.start');
+        const stopButton = document.querySelector('.record-button.stop');
+        if (startButton && stopButton) {
+            startButton.style.display = 'none';
+            stopButton.style.display = 'block';
+        }
+        
+        // Показываем уведомление
+        if (window.Telegram?.WebApp?.showPopup) {
+            window.Telegram.WebApp.showPopup({
+                title: 'Запись начата',
+                message: 'Нажимайте на пады, чтобы создать свой бит!',
+                buttons: [{type: 'default', text: 'OK'}]
+            });
+        }
+        
+        console.log('Запись начата');
+        
+    } catch (error) {
+        console.error('Ошибка при начале записи:', error);
+        if (window.Telegram?.WebApp?.showAlert) {
+            window.Telegram.WebApp.showAlert('Произошла ошибка при начале записи: ' + error.message);
+        }
+    }
+}
+
+// Функция для остановки записи
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        
+        // Обновляем интерфейс
+        const startButton = document.querySelector('.record-button.start');
+        const stopButton = document.querySelector('.record-button.stop');
+        if (startButton && stopButton) {
+            startButton.style.display = 'block';
+            stopButton.style.display = 'none';
+        }
+        
+        console.log('Запись остановлена');
+    }
+}
+
+// Обработчик окончания записи
+function handleRecordingStopped() {
+    try {
+        // Создаем Blob из записанных данных
+        const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+        
+        // Создаем URL для Blob
+        const url = URL.createObjectURL(blob);
+        
+        // Показываем попап с опциями
+        if (window.Telegram?.WebApp?.showPopup) {
+            window.Telegram.WebApp.showPopup({
+                title: 'Запись завершена',
+                message: 'Что вы хотите сделать с записью?',
+                buttons: [
+                    {
+                        type: 'default',
+                        text: 'Скачать',
+                        id: 'download'
+                    },
+                    {
+                        type: 'default',
+                        text: 'Прослушать',
+                        id: 'play'
+                    },
+                    {
+                        type: 'cancel',
+                        text: 'Отмена'
+                    }
+                ]
+            }, function(buttonId) {
+                if (buttonId === 'download') {
+                    // Используем Telegram WebApp API для открытия ссылки
+                    if (window.Telegram?.WebApp?.openLink) {
+                        window.Telegram.WebApp.openLink(url);
+                    } else {
+                        // Резервный вариант - создаем ссылку для скачивания в DOM
+                        createDownloadLink(url, blob.size);
+                    }
+                } else if (buttonId === 'play') {
+                    // Создаем аудио элемент для воспроизведения
+                    createAudioPlayer(url);
+                }
+            });
+        } else {
+            // Если попап недоступен, создаем элементы управления в DOM
+            createAudioPlayer(url);
+            createDownloadLink(url, blob.size);
+        }
+        
+    } catch (error) {
+        console.error('Ошибка при обработке записи:', error);
+        if (window.Telegram?.WebApp?.showAlert) {
+            window.Telegram.WebApp.showAlert('Произошла ошибка при обработке записи: ' + error.message);
+        }
+    }
+}
+
+// Создает элемент аудио для воспроизведения
+function createAudioPlayer(url) {
+    // Удаляем предыдущий плеер, если он есть
+    const existingPlayer = document.querySelector('.recording-player');
+    if (existingPlayer) {
+        existingPlayer.remove();
+    }
+    
+    // Создаем контейнер для плеера
+    const playerContainer = document.createElement('div');
+    playerContainer.className = 'recording-player';
+    
+    // Создаем заголовок
+    const title = document.createElement('h3');
+    title.textContent = 'Ваша запись';
+    
+    // Создаем аудио элемент
+    const audio = document.createElement('audio');
+    audio.controls = true;
+    audio.src = url;
+    
+    // Добавляем элементы в контейнер
+    playerContainer.appendChild(title);
+    playerContainer.appendChild(audio);
+    
+    // Добавляем контейнер в DOM
+    document.querySelector('#game-section').appendChild(playerContainer);
+    
+    // Воспроизводим аудио
+    audio.play();
+}
+
+// Создает ссылку для скачивания
+function createDownloadLink(url, size) {
+    // Удаляем предыдущую ссылку, если она есть
+    const existingLink = document.querySelector('.download-link');
+    if (existingLink) {
+        existingLink.remove();
+    }
+    
+    // Создаем контейнер для ссылки
+    const linkContainer = document.createElement('div');
+    linkContainer.className = 'download-link';
+    
+    // Форматируем размер файла
+    const formattedSize = formatFileSize(size);
+    
+    // Создаем ссылку
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `drumpad-recording-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
+    link.textContent = `Скачать запись (${formattedSize})`;
+    link.className = 'download-button';
+    
+    // Добавляем ссылку в контейнер
+    linkContainer.appendChild(link);
+    
+    // Добавляем контейнер в DOM
+    document.querySelector('#game-section').appendChild(linkContainer);
+}
+
+// Форматирует размер файла
+function formatFileSize(bytes) {
+    if (bytes < 1024) {
+        return bytes + ' B';
+    } else if (bytes < 1024 * 1024) {
+        return (bytes / 1024).toFixed(2) + ' KB';
+    } else {
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
     }
 }

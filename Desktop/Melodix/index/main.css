@@ -476,7 +476,7 @@ body {
     align-items: center;
     padding: 20px;
     padding-top: calc(40px + var(--safe-area-inset-top, 0px));
-    min-height: calc(100vh - 60px - var(--safe-area-inset-bottom, 0px));
+    min-height: calc(100vh - 140px - var(--safe-area-inset-bottom, 0px));
     height: auto;
 }
 
@@ -596,4 +596,130 @@ body {
     font-size: 14px;
     color: #999;
     text-align: center;
+}
+
+/* Стили для элементов записи */
+.recording-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    z-index: 100;
+    padding: 10px;
+}
+
+.record-button {
+    background: linear-gradient(180deg, #333333 0%, #1F1F1F 100%);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.record-button.start {
+    background: linear-gradient(180deg, #444444 0%, #2F2F2F 100%);
+}
+
+.record-button.start:before {
+    content: '⏺️';
+    margin-right: 8px;
+}
+
+.record-button.stop {
+    background: linear-gradient(180deg, #E42929 0%, #D42020 100%);
+}
+
+.record-button.stop:before {
+    content: '⏹️';
+    margin-right: 8px;
+}
+
+.record-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.record-button:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.recording-player {
+    position: fixed;
+    bottom: 80px;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 0 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 99;
+}
+
+.recording-player h3 {
+    color: #FFFFFF;
+    margin: 0 0 10px 0;
+    font-size: 16px;
+}
+
+.recording-player audio {
+    width: 100%;
+    max-width: 300px;
+    height: 40px;
+}
+
+.download-link {
+    position: fixed;
+    bottom: 140px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 99;
+    padding: 10px;
+}
+
+.download-button {
+    background: linear-gradient(180deg, #4CAF50 0%, #45a049 100%);
+    color: #FFFFFF;
+    text-decoration: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.download-button:before {
+    content: '⬇️';
+    margin-right: 8px;
+}
+
+.download-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.download-button:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
