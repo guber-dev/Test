@@ -754,8 +754,31 @@ function startRecording() {
             source.connect(audioContext.destination); // Чтобы звук был слышен во время записи
         });
         
-        // Инициализируем MediaRecorder
-        mediaRecorder = new MediaRecorder(dest.stream, { mimeType: 'audio/webm' });
+        // Определяем поддерживаемый MIME-тип
+        const mimeTypes = [
+            'audio/webm',
+            'audio/mp4',
+            'audio/ogg',
+            'audio/wav',
+            ''  // Пустая строка означает использование браузерного стандарта по умолчанию
+        ];
+        
+        let mimeType = '';
+        
+        // Проверяем поддержку MIME-типов
+        for (let type of mimeTypes) {
+            if (type && MediaRecorder.isTypeSupported(type)) {
+                mimeType = type;
+                console.log(`Поддерживаемый mimeType найден: ${mimeType}`);
+                break;
+            }
+        }
+        
+        // Инициализируем MediaRecorder с проверенным MIME-типом
+        const options = mimeType ? { mimeType } : {};
+        console.log('Создаем MediaRecorder с опциями:', options);
+        
+        mediaRecorder = new MediaRecorder(dest.stream, options);
         recordedChunks = [];
         
         // Обработчик для сбора данных
@@ -818,11 +841,38 @@ function stopRecording() {
 // Обработчик окончания записи
 function handleRecordingStopped() {
     try {
+        if (recordedChunks.length === 0) {
+            console.error('Нет записанных данных');
+            if (window.Telegram?.WebApp?.showAlert) {
+                window.Telegram.WebApp.showAlert('Не удалось получить записанные данные');
+            }
+            return;
+        }
+        
+        // Определяем тип контента для файла
+        let contentType = 'audio/webm';
+        
+        // Проверяем тип текущего рекордера
+        if (mediaRecorder && mediaRecorder.mimeType) {
+            contentType = mediaRecorder.mimeType;
+        }
+        
+        console.log('Тип контента для blob:', contentType);
+        
         // Создаем Blob из записанных данных
-        const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+        const blob = new Blob(recordedChunks, { type: contentType });
         
         // Создаем URL для Blob
         const url = URL.createObjectURL(blob);
+        
+        // Генерируем расширение файла на основе типа контента
+        let fileExtension = 'webm';
+        if (contentType.includes('mp4')) fileExtension = 'mp4';
+        if (contentType.includes('ogg')) fileExtension = 'ogg';
+        if (contentType.includes('wav')) fileExtension = 'wav';
+        
+        // Создаем имя файла
+        const fileName = `drumpad-recording-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.${fileExtension}`;
         
         // Показываем попап с опциями
         if (window.Telegram?.WebApp?.showPopup) {
@@ -852,7 +902,7 @@ function handleRecordingStopped() {
                         window.Telegram.WebApp.openLink(url);
                     } else {
                         // Резервный вариант - создаем ссылку для скачивания в DOM
-                        createDownloadLink(url, blob.size);
+                        createDownloadLink(url, blob.size, fileName);
                     }
                 } else if (buttonId === 'play') {
                     // Создаем аудио элемент для воспроизведения
@@ -862,7 +912,7 @@ function handleRecordingStopped() {
         } else {
             // Если попап недоступен, создаем элементы управления в DOM
             createAudioPlayer(url);
-            createDownloadLink(url, blob.size);
+            createDownloadLink(url, blob.size, fileName);
         }
         
     } catch (error) {
@@ -906,7 +956,7 @@ function createAudioPlayer(url) {
 }
 
 // Создает ссылку для скачивания
-function createDownloadLink(url, size) {
+function createDownloadLink(url, size, fileName) {
     // Удаляем предыдущую ссылку, если она есть
     const existingLink = document.querySelector('.download-link');
     if (existingLink) {
@@ -923,7 +973,7 @@ function createDownloadLink(url, size) {
     // Создаем ссылку
     const link = document.createElement('a');
     link.href = url;
-    link.download = `drumpad-recording-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
+    link.download = fileName || `drumpad-recording-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
     link.textContent = `Скачать запись (${formattedSize})`;
     link.className = 'download-button';
     
