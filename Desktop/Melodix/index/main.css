@@ -46,9 +46,10 @@ body {
     max-width: 500px;
     margin: 0 auto;
     position: absolute;
-    top: 50%;
+    top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
+    z-index: 10;
 }
 
 .pad {
@@ -601,7 +602,7 @@ body {
 /* Стили для элементов записи */
 .recording-controls {
     position: fixed;
-    bottom: 20px;
+    bottom: 80px;
     left: 0;
     right: 0;
     display: flex;

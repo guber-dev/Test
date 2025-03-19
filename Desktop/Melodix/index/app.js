@@ -586,7 +586,7 @@ function createDJPads() {
         
         // Определяем звуки и их метки
         const sounds = [
-            { src: './sounds/Kick.mp3', label: 'Kick' },
+            { src: './sounds/TomM.mp3', label: 'Bass Drum' },
             { src: './sounds/Snare01.mp3', label: 'Snare' },
             { src: './sounds/Hat.mp3', label: 'Hi-Hat' },
             { src: './sounds/Rim.mp3', label: 'Rim' },
