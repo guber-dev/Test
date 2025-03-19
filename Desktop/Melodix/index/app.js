@@ -40,10 +40,12 @@ function setupTelegramColors() {
       tg.requestViewport();
     }
     
-    // Запрашиваем полноэкранный режим (Bot API 8.0+)
-    if (tg.requestFullscreen) {
+    // Запрашиваем полноэкранный режим только на мобильных устройствах
+    if (tg.requestFullscreen && isMobileDevice()) {
       tg.requestFullscreen();
-      console.log('Запрошен полноэкранный режим');
+      console.log('Запрошен полноэкранный режим на мобильном устройстве');
+    } else {
+      console.log('Полноэкранный режим не запрошен: не мобильное устройство или функция недоступна');
     }
 
     // Обновляем отступы безопасных зон
@@ -59,6 +61,34 @@ function setupTelegramColors() {
   } catch (error) {
     console.error('Ошибка при настройке Telegram:', error.message);
   }
+}
+
+// Функция для определения мобильного устройства
+function isMobileDevice() {
+  // Проверяем User Agent
+  const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+  
+  // Регулярные выражения для определения мобильных устройств
+  const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+  
+  // Проверяем размер экрана (типичный для мобильных устройств)
+  const screenCheck = window.innerWidth <= 768;
+  
+  // Проверяем ориентацию (если она доступна, это, скорее всего, мобильное устройство)
+  const hasOrientation = typeof window.orientation !== 'undefined';
+  
+  // Проверяем поддержку touch событий
+  const touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  
+  // Проверяем платформу
+  const platform = navigator.platform;
+  const macPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];
+  const windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'];
+  const isDesktopPlatform = macPlatforms.includes(platform) || windowsPlatforms.includes(platform);
+  
+  // Если в User Agent есть упоминание мобильных платформ,
+  // или размер экрана подходит для мобильных, и это не десктопная платформа
+  return (mobileRegex.test(userAgent) || (screenCheck && touchSupport && !isDesktopPlatform));
 }
 
 // Функция для обновления отступов безопасных зон
