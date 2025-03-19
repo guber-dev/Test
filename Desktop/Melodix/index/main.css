@@ -724,3 +724,70 @@ body {
     transform: translateY(0);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
+
+/* Стили для интерфейса записи */
+.recording-result-interface {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 350px;
+    background-color: var(--tg-theme-bg-color, #ffffff);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.recording-result-interface h3 {
+    margin-top: 0;
+    font-size: 18px;
+    color: var(--tg-theme-text-color, #000000);
+    margin-bottom: 15px;
+}
+
+.recording-player-audio {
+    width: 100%;
+    margin-bottom: 15px;
+    border-radius: 8px;
+}
+
+.recording-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.recording-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.download-button {
+    background-color: var(--tg-theme-button-color, #2481cc);
+    color: var(--tg-theme-button-text-color, #ffffff);
+}
+
+.download-button:hover {
+    opacity: 0.9;
+}
+
+.close-button {
+    background-color: var(--tg-theme-secondary-bg-color, #f1f1f1);
+    color: var(--tg-theme-text-color, #000000);
+}
+
+.close-button:hover {
+    background-color: #e5e5e5;
+}

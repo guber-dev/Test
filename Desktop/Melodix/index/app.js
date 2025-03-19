@@ -16,6 +16,10 @@ let audioContext = null;
 // Глобальные переменные для записи
 let mediaRecorder;
 let recordedChunks = [];
+let audioSourceNodes = new Map(); // Хранит аудио источники, чтобы избежать повторного подключения
+let lastRecordingUrl = null; // Хранит URL последней записи
+let lastRecordingBlob = null; // Хранит Blob последней записи
+let lastFileName = null; // Хранит имя файла последней записи
 
 // Настройка цветов и темы для Telegram Mini App
 function setupTelegramColors() {
@@ -774,12 +778,17 @@ function startRecording() {
     }
     
     try {
+        // Очищаем предыдущие источники
+        audioSourceNodes.clear();
+        
         // Создаем узел назначения для записи
         const dest = audioContext.createMediaStreamDestination();
         
         // Подключаем все звуки к узлу записи
         document.querySelectorAll('.pad audio').forEach(audioElement => {
+            // Используем новый источник для каждого аудио элемента
             const source = audioContext.createMediaElementSource(audioElement);
+            audioSourceNodes.set(audioElement, source); // Сохраняем источник
             source.connect(dest);
             source.connect(audioContext.destination); // Чтобы звук был слышен во время записи
         });
@@ -904,46 +913,13 @@ function handleRecordingStopped() {
         // Создаем имя файла
         const fileName = `drumpad-recording-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.${fileExtension}`;
         
-        // Показываем попап с опциями
-        if (window.Telegram?.WebApp?.showPopup) {
-            window.Telegram.WebApp.showPopup({
-                title: 'Запись завершена',
-                message: 'Что вы хотите сделать с записью?',
-                buttons: [
-                    {
-                        type: 'default',
-                        text: 'Скачать',
-                        id: 'download'
-                    },
-                    {
-                        type: 'default',
-                        text: 'Прослушать',
-                        id: 'play'
-                    },
-                    {
-                        type: 'cancel',
-                        text: 'Отмена'
-                    }
-                ]
-            }, function(buttonId) {
-                if (buttonId === 'download') {
-                    // Используем Telegram WebApp API для открытия ссылки
-                    if (window.Telegram?.WebApp?.openLink) {
-                        window.Telegram.WebApp.openLink(url);
-                    } else {
-                        // Резервный вариант - создаем ссылку для скачивания в DOM
-                        createDownloadLink(url, blob.size, fileName);
-                    }
-                } else if (buttonId === 'play') {
-                    // Создаем аудио элемент для воспроизведения
-                    createAudioPlayer(url);
-                }
-            });
-        } else {
-            // Если попап недоступен, создаем элементы управления в DOM
-            createAudioPlayer(url);
-            createDownloadLink(url, blob.size, fileName);
-        }
+        // Сохраняем данные для повторного использования
+        lastRecordingUrl = url;
+        lastRecordingBlob = blob;
+        lastFileName = fileName;
+        
+        // Показываем интерфейс для записи
+        showRecordingInterface();
         
     } catch (error) {
         console.error('Ошибка при обработке записи:', error);
@@ -953,74 +929,125 @@ function handleRecordingStopped() {
     }
 }
 
-// Создает элемент аудио для воспроизведения
-function createAudioPlayer(url) {
-    // Удаляем предыдущий плеер, если он есть
-    const existingPlayer = document.querySelector('.recording-player');
-    if (existingPlayer) {
-        existingPlayer.remove();
+// Показывает интерфейс для работы с записью
+function showRecordingInterface() {
+    try {
+        if (!lastRecordingUrl || !lastRecordingBlob) {
+            console.error('Нет доступной записи');
+            return;
+        }
+        
+        // Создаем контейнер для интерфейса записи
+        const recordingInterface = document.createElement('div');
+        recordingInterface.className = 'recording-result-interface';
+        
+        // Создаем заголовок
+        const title = document.createElement('h3');
+        title.textContent = 'Ваша запись';
+        
+        // Создаем аудио элемент
+        const audio = document.createElement('audio');
+        audio.className = 'recording-player-audio';
+        audio.controls = true;
+        audio.src = lastRecordingUrl;
+        
+        // Создаем кнопки управления
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.className = 'recording-buttons';
+        
+        // Кнопка для скачивания
+        const downloadButton = document.createElement('button');
+        downloadButton.className = 'recording-button download-button';
+        downloadButton.textContent = 'Скачать';
+        downloadButton.addEventListener('click', function() {
+            downloadRecording();
+        });
+        
+        // Кнопка для закрытия
+        const closeButton = document.createElement('button');
+        closeButton.className = 'recording-button close-button';
+        closeButton.textContent = 'Закрыть';
+        closeButton.addEventListener('click', function() {
+            const interface = document.querySelector('.recording-result-interface');
+            if (interface) {
+                interface.remove();
+            }
+        });
+        
+        // Добавляем кнопки в контейнер
+        buttonsContainer.appendChild(downloadButton);
+        buttonsContainer.appendChild(closeButton);
+        
+        // Добавляем элементы в интерфейс
+        recordingInterface.appendChild(title);
+        recordingInterface.appendChild(audio);
+        recordingInterface.appendChild(buttonsContainer);
+        
+        // Удаляем предыдущий интерфейс, если он есть
+        const existingInterface = document.querySelector('.recording-result-interface');
+        if (existingInterface) {
+            existingInterface.remove();
+        }
+        
+        // Добавляем интерфейс в DOM
+        document.querySelector('#game-section').appendChild(recordingInterface);
+        
+        // Воспроизводим аудио автоматически
+        audio.play().catch(e => {
+            console.warn('Автовоспроизведение не удалось:', e);
+        });
+    } catch (error) {
+        console.error('Ошибка при создании интерфейса записи:', error);
     }
-    
-    // Создаем контейнер для плеера
-    const playerContainer = document.createElement('div');
-    playerContainer.className = 'recording-player';
-    
-    // Создаем заголовок
-    const title = document.createElement('h3');
-    title.textContent = 'Ваша запись';
-    
-    // Создаем аудио элемент
-    const audio = document.createElement('audio');
-    audio.controls = true;
-    audio.src = url;
-    
-    // Добавляем элементы в контейнер
-    playerContainer.appendChild(title);
-    playerContainer.appendChild(audio);
-    
-    // Добавляем контейнер в DOM
-    document.querySelector('#game-section').appendChild(playerContainer);
-    
-    // Воспроизводим аудио
-    audio.play();
 }
 
-// Создает ссылку для скачивания
-function createDownloadLink(url, size, fileName) {
-    // Удаляем предыдущую ссылку, если она есть
-    const existingLink = document.querySelector('.download-link');
-    if (existingLink) {
-        existingLink.remove();
-    }
-    
-    // Создаем контейнер для ссылки
-    const linkContainer = document.createElement('div');
-    linkContainer.className = 'download-link';
-    
-    // Форматируем размер файла
-    const formattedSize = formatFileSize(size);
-    
-    // Создаем ссылку
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName || `drumpad-recording-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
-    link.textContent = `Скачать запись (${formattedSize})`;
-    link.className = 'download-button';
-    
-    // Добавляем ссылку в контейнер
-    linkContainer.appendChild(link);
-    
-    // Добавляем контейнер в DOM
-    document.querySelector('#game-section').appendChild(linkContainer);
-}
-
-// Форматирует размер файла
-function formatFileSize(bytes) {
-    if (bytes < 1024) {
-        return bytes + ' B';
-    } else if (bytes < 1024 * 1024) {
-        return (bytes / 1024).toFixed(2) + ' KB';
-    } else {
-        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+// Функция для скачивания записи
+function downloadRecording() {
+    try {
+        if (!lastRecordingUrl || !lastFileName) {
+            console.error('Нет доступной записи для скачивания');
+            if (window.Telegram?.WebApp?.showAlert) {
+                window.Telegram.WebApp.showAlert('Нет доступной записи для скачивания');
+            }
+            return;
+        }
+        
+        console.log('Скачивание записи:', lastFileName);
+        
+        // Создаем ссылку для скачивания
+        const downloadLink = document.createElement('a');
+        downloadLink.style.display = 'none';
+        downloadLink.href = lastRecordingUrl;
+        downloadLink.download = lastFileName;
+        document.body.appendChild(downloadLink);
+        
+        // Если доступно API Telegram для открытия ссылок
+        if (window.Telegram?.WebApp?.openLink) {
+            // Используем openLink в Telegram для открытия и скачивания
+            window.Telegram.WebApp.openLink(lastRecordingUrl);
+            // Показываем уведомление
+            setTimeout(() => {
+                if (window.Telegram?.WebApp?.showPopup) {
+                    window.Telegram.WebApp.showPopup({
+                        title: 'Загрузка',
+                        message: 'Запись готова к скачиванию',
+                        buttons: [{type: 'default', text: 'OK'}]
+                    });
+                }
+            }, 500);
+        } else {
+            // Используем обычный метод скачивания в браузере
+            downloadLink.click();
+        }
+        
+        // Удаляем ссылку из DOM после скачивания
+        setTimeout(() => {
+            document.body.removeChild(downloadLink);
+        }, 100);
+    } catch (error) {
+        console.error('Ошибка при скачивании записи:', error);
+        if (window.Telegram?.WebApp?.showAlert) {
+            window.Telegram.WebApp.showAlert('Ошибка при скачивании записи: ' + error.message);
+        }
     }
 }
