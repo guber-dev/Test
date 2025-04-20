@@ -21,6 +21,9 @@ let lastRecordingUrl = null; // Хранит URL последней записи
 let lastRecordingBlob = null; // Хранит Blob последней записи
 let lastFileName = null; // Хранит имя файла последней записи
 
+// Кэш декодированных буферов
+let audioBuffers = new Map();
+
 // Настройка цветов и темы для Telegram Mini App
 function setupTelegramColors() {
   try {
@@ -513,50 +516,71 @@ function initAudioContext() {
     }
 }
 
-// Воспроизведение звука
-function playSound(pad) {
+// Предварительное декодирование звуков
+async function preloadAndDecodeSounds() {
     try {
-        // Инициализируем аудио контекст при первом взаимодействии
         if (!audioContext) {
             initAudioContext();
         }
-        
-        const audio = pad.querySelector('audio');
-        if (!audio) {
-            console.error('Аудио элемент не найден в паде');
+
+        const sounds = [
+            { src: './sounds/TomM.mp3', label: 'Bass Drum' },
+            { src: './sounds/Snare01.mp3', label: 'Snare' },
+            { src: './sounds/Hat.mp3', label: 'Hi-Hat' },
+            { src: './sounds/Rim.mp3', label: 'Rim' },
+            { src: './sounds/TomF.mp3', label: 'Tom' },
+            { src: './sounds/Crash01.mp3', label: 'Crash' },
+            { src: './sounds/Hat_Open.mp3', label: 'Open Hat' },
+            { src: './sounds/Crash_02.mp3', label: 'Crash 2' },
+            { src: './sounds/Ride01.mp3', label: 'Ride' },
+            { src: './sounds/Ride02.mp3', label: 'Ride 2' },
+            { src: './sounds/TomL.mp3', label: 'Tom L' },
+            { src: './sounds/Shake.mp3', label: 'Shake' }
+        ];
+
+        for (const sound of sounds) {
+            try {
+                const response = await fetch(sound.src);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                audioBuffers.set(sound.src, audioBuffer);
+                console.log(`Звук ${sound.src} успешно декодирован`);
+            } catch (error) {
+                console.error(`Ошибка при декодировании ${sound.src}:`, error);
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка при предварительной загрузке звуков:', error);
+    }
+}
+
+// Воспроизведение звука через AudioContext
+function playSound(pad) {
+    try {
+        if (!audioContext) {
+            initAudioContext();
+        }
+
+        const soundPath = pad.getAttribute('data-sound');
+        const audioBuffer = audioBuffers.get(soundPath);
+
+        if (!audioBuffer) {
+            console.error(`Буфер для ${soundPath} не найден`);
             return;
         }
-        
-        const soundPath = pad.getAttribute('data-sound');
-        
-        // Проверяем, загружен ли звук
-        if (!audio.readyState) {
-            console.log('Звук еще не загружен, пробуем загрузить:', soundPath);
-            audio.load();
-        }
-        
-        // Сбрасываем воспроизведение
-        audio.currentTime = 0;
-        
-        // Пробуем воспроизвести обычным способом
-        audio.play()
-            .then(() => {
-                console.log(`Звук ${soundPath} успешно воспроизведен`);
-            })
-            .catch(error => {
-                console.error(`Ошибка воспроизведения:`, error);
-                fallbackPlaySound(soundPath);
-            });
-        
+
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioContext.destination);
+        source.start(0);
+
         // Добавляем класс для анимации
         pad.classList.add('active');
-        
-        // Удаляем класс после окончания анимации
         setTimeout(() => {
             pad.classList.remove('active');
         }, 300);
-        
-        // Обновляем счет, если функция существует
+
+        // Обновляем счет
         if (typeof updateScore === 'function') {
             try {
                 updateScore(1);
@@ -564,31 +588,8 @@ function playSound(pad) {
                 console.warn('Ошибка при обновлении счета:', e);
             }
         }
-        
     } catch (error) {
         console.error('Ошибка в функции playSound:', error);
-        // Пробуем запасной вариант воспроизведения
-        try {
-            const soundPath = pad.getAttribute('data-sound');
-            if (soundPath) {
-                fallbackPlaySound(soundPath);
-            }
-        } catch (e) {
-            console.error('Ошибка в запасном воспроизведении:', e);
-        }
-    }
-}
-
-// Запасной вариант воспроизведения звука
-function fallbackPlaySound(soundPath) {
-    try {
-        const newAudio = new Audio(soundPath);
-        newAudio.load();
-        newAudio.play()
-            .then(() => console.log(`Звук ${soundPath} воспроизведен запасным способом`))
-            .catch(err => console.error(`Не удалось воспроизвести звук запасным способом:`, err));
-    } catch (error) {
-        console.error('Ошибка в запасном методе воспроизведения:', error);
     }
 }
 
@@ -597,28 +598,21 @@ function createDJPads() {
     try {
         console.log('Начинаем создание DJ-падов');
         
-        // Проверяем, существует ли секция игры
         const gameSection = document.getElementById('game-section');
         if (!gameSection) {
             console.error('Секция игры #game-section не найдена');
             return;
         }
         
-        // Проверяем, существует ли уже контейнер с падами
         if (document.querySelector('#game-section .pads-container')) {
             console.log('Пады уже созданы');
-            return; // Пады уже созданы
+            return;
         }
         
-        // Создаем контейнер для падов
         const padsContainer = document.createElement('div');
         padsContainer.className = 'pads-container';
-        
-        // Добавляем контейнер в секцию игры
         gameSection.appendChild(padsContainer);
-        console.log('Контейнер для падов добавлен в DOM');
         
-        // Определяем звуки и их метки
         const sounds = [
             { src: './sounds/TomM.mp3', label: 'Bass Drum' },
             { src: './sounds/Snare01.mp3', label: 'Snare' },
@@ -634,61 +628,28 @@ function createDJPads() {
             { src: './sounds/Shake.mp3', label: 'Shake' }
         ];
         
-        console.log(`Подготовлено ${sounds.length} звуков для создания падов`);
-        
-        // Создаем пады для каждого звука
         sounds.forEach((sound, index) => {
-            try {
-                // Создаем элемент пада
-                const pad = document.createElement('div');
-                pad.className = 'pad';
-                pad.setAttribute('data-sound', sound.src);
-                pad.setAttribute('data-index', index);
-                
-                // Создаем аудио элемент
-                const audio = document.createElement('audio');
-                audio.src = sound.src;
-                audio.preload = 'auto';
-                
-                // Добавляем обработчик ошибок для аудио
-                audio.addEventListener('error', function(e) {
-                    console.error(`Ошибка загрузки звука ${sound.src}:`, e);
-                });
-                
-                // Создаем метку для пада
-                const label = document.createElement('div');
-                label.className = 'pad-label';
-                label.textContent = sound.label;
-                
-                // Добавляем элементы в DOM
-                pad.appendChild(audio);
-                pad.appendChild(label);
-                padsContainer.appendChild(pad);
-                
-                // Добавляем обработчики событий
-                pad.addEventListener('click', function() {
-                    playSound(this);
-                });
-                
-                pad.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    playSound(this);
-                });
-                
-                // Предзагружаем звук
-                audio.load();
-            } catch (error) {
-                console.error(`Ошибка при создании пада ${index}:`, error);
-            }
+            const pad = document.createElement('div');
+            pad.className = 'pad';
+            pad.setAttribute('data-sound', sound.src);
+            pad.setAttribute('data-index', index);
+            
+            const label = document.createElement('div');
+            label.className = 'pad-label';
+            label.textContent = sound.label;
+            
+            pad.appendChild(label);
+            padsContainer.appendChild(pad);
+            
+            pad.addEventListener('click', () => playSound(pad));
+            pad.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                playSound(pad);
+            });
         });
         
-        console.log('DJ-пады успешно созданы');
-        
-        // Инициализируем аудио контекст при создании падов
-        document.addEventListener('touchstart', function initAudioOnFirstTouch() {
-            initAudioContext();
-            document.removeEventListener('touchstart', initAudioOnFirstTouch);
-        }, { once: true });
+        // Предварительно загружаем и декодируем звуки
+        preloadAndDecodeSounds();
         
         return true;
     } catch (error) {
@@ -1014,36 +975,86 @@ function downloadRecording() {
         
         console.log('Скачивание записи:', lastFileName);
         
-        // Создаем ссылку для скачивания
-        const downloadLink = document.createElement('a');
-        downloadLink.style.display = 'none';
-        downloadLink.href = lastRecordingUrl;
-        downloadLink.download = lastFileName;
-        document.body.appendChild(downloadLink);
+        // Телеграм WebApp запускается внутри WebView, который имеет ограничения с загрузкой файлов
+        // Используем несколько стратегий для обеспечения скачивания
         
-        // Если доступно API Telegram для открытия ссылок
-        if (window.Telegram?.WebApp?.openLink) {
-            // Используем openLink в Telegram для открытия и скачивания
-            window.Telegram.WebApp.openLink(lastRecordingUrl);
-            // Показываем уведомление
-            setTimeout(() => {
-                if (window.Telegram?.WebApp?.showPopup) {
-                    window.Telegram.WebApp.showPopup({
-                        title: 'Загрузка',
-                        message: 'Запись готова к скачиванию',
-                        buttons: [{type: 'default', text: 'OK'}]
-                    });
+        if (window.Telegram?.WebApp) {
+            if (window.Telegram.WebApp.openLink) {
+                // Метод 1: Открытие URL в браузере (может не работать для blob URL)
+                try {
+                    console.log('Используем Telegram.WebApp.openLink для скачивания');
+                    window.Telegram.WebApp.openLink(lastRecordingUrl);
+                    
+                    // Показываем уведомление
+                    setTimeout(() => {
+                        if (window.Telegram.WebApp.showPopup) {
+                            window.Telegram.WebApp.showPopup({
+                                title: 'Загрузка файла',
+                                message: 'Файл открыт в браузере. Используйте кнопку "Сохранить" или "Скачать" в браузере.',
+                                buttons: [{type: 'default', text: 'OK'}]
+                            });
+                        }
+                    }, 500);
+                    return;
+                } catch (e) {
+                    console.error('Ошибка при использовании openLink:', e);
                 }
-            }, 500);
-        } else {
-            // Используем обычный метод скачивания в браузере
-            downloadLink.click();
+            }
+            
+            // Метод 2: Попробуем использовать MainButton с информационным сообщением
+            if (window.Telegram.WebApp.MainButton) {
+                try {
+                    window.open(lastRecordingUrl, '_blank');
+                    
+                    window.Telegram.WebApp.MainButton.setText('Скачать запись');
+                    window.Telegram.WebApp.MainButton.show();
+                    window.Telegram.WebApp.MainButton.onClick(() => {
+                        window.open(lastRecordingUrl, '_blank');
+                    });
+                    
+                    // Показываем подсказку
+                    if (window.Telegram.WebApp.showPopup) {
+                        window.Telegram.WebApp.showPopup({
+                            title: 'Загрузка файла',
+                            message: 'Запись открыта в новом окне. Нажмите на кнопку внизу, чтобы открыть еще раз.',
+                            buttons: [{type: 'default', text: 'OK'}]
+                        });
+                    }
+                    return;
+                } catch (e) {
+                    console.error('Ошибка при использовании MainButton:', e);
+                    window.Telegram.WebApp.MainButton.hide();
+                }
+            }
         }
         
-        // Удаляем ссылку из DOM после скачивания
-        setTimeout(() => {
-            document.body.removeChild(downloadLink);
-        }, 100);
+        // Метод 3: Стандартное скачивание через DOM в обычном браузере
+        try {
+            console.log('Используем стандартный метод скачивания через DOM');
+            const downloadLink = document.createElement('a');
+            downloadLink.style.display = 'none';
+            downloadLink.href = lastRecordingUrl;
+            downloadLink.download = lastFileName;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            
+            // Удаляем ссылку из DOM после скачивания
+            setTimeout(() => {
+                document.body.removeChild(downloadLink);
+            }, 100);
+            
+            // Показываем сообщение об успешной загрузке
+            if (window.Telegram?.WebApp?.showAlert) {
+                window.Telegram.WebApp.showAlert('Файл загружается. Проверьте папку загрузок.');
+            }
+        } catch (e) {
+            console.error('Ошибка при стандартном методе скачивания:', e);
+            
+            // Если все методы не работают, показываем уведомление о проблеме
+            if (window.Telegram?.WebApp?.showAlert) {
+                window.Telegram.WebApp.showAlert('Не удалось скачать запись. Пожалуйста, попробуйте другой браузер или устройство.');
+            }
+        }
     } catch (error) {
         console.error('Ошибка при скачивании записи:', error);
         if (window.Telegram?.WebApp?.showAlert) {
