@@ -347,6 +347,52 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // Обновляем статистику в профиле, если она доступна
         updateReferralStats();
+
+        // Инициализируем обработчики кнопок
+        // Обработчик для кнопки приглашения друзей
+        const inviteButton = document.getElementById('invite-friends-btn');
+        if (inviteButton) {
+            inviteButton.addEventListener('click', async function() {
+                if (window.referralSystem) {
+                    await window.referralSystem.shareReferralLink();
+                } else {
+                    console.error('Реферальная система не инициализирована');
+                    if (window.Telegram?.WebApp?.showAlert) {
+                        window.Telegram.WebApp.showAlert('Не удалось поделиться ссылкой. Попробуйте позже.');
+                    }
+                }
+            });
+        }
+
+        // Обработчик для кнопки шаринга через deeplink
+        const shareDeeplinkButton = document.getElementById('share-deeplink-btn');
+        if (shareDeeplinkButton) {
+            shareDeeplinkButton.addEventListener('click', async function() {
+                if (window.referralSystem) {
+                    await window.referralSystem.shareViaDeeplink();
+                } else {
+                    console.error('Реферальная система не инициализирована');
+                    if (window.Telegram?.WebApp?.showAlert) {
+                        window.Telegram.WebApp.showAlert('Не удалось создать ссылку. Попробуйте позже.');
+                    }
+                }
+            });
+        }
+
+        // Обработчик для кнопки шаринга через URL
+        const shareUrlButton = document.getElementById('share-url-btn');
+        if (shareUrlButton) {
+            shareUrlButton.addEventListener('click', async function() {
+                if (window.referralSystem) {
+                    await window.referralSystem.shareViaUrl();
+                } else {
+                    console.error('Реферальная система не инициализирована');
+                    if (window.Telegram?.WebApp?.showAlert) {
+                        window.Telegram.WebApp.showAlert('Не удалось создать ссылку. Попробуйте позже.');
+                    }
+                }
+            });
+        }
     }, 1000);
 });
 
@@ -370,38 +416,5 @@ async function updateReferralStats() {
         console.log('Статистика реферальной системы обновлена:', stats);
     } catch (error) {
         console.error('Ошибка при обновлении статистики:', error);
-    }
-}
-
-// Инициализируем обработчики меню
-function initMenuHandlers() {
-    // Обработчик для кнопки шаринга через deeplink
-    const shareDeeplinkButton = document.getElementById('share-deeplink-btn');
-    if (shareDeeplinkButton) {
-        shareDeeplinkButton.addEventListener('click', async function() {
-            if (window.referralSystem) {
-                await window.referralSystem.shareViaDeeplink();
-            } else {
-                console.error('Реферальная система не инициализирована');
-                if (window.Telegram?.WebApp?.showAlert) {
-                    window.Telegram.WebApp.showAlert('Не удалось создать ссылку. Попробуйте позже.');
-                }
-            }
-        });
-    }
-
-    // Обработчик для кнопки шаринга через URL
-    const shareUrlButton = document.getElementById('share-url-btn');
-    if (shareUrlButton) {
-        shareUrlButton.addEventListener('click', async function() {
-            if (window.referralSystem) {
-                await window.referralSystem.shareViaUrl();
-            } else {
-                console.error('Реферальная система не инициализирована');
-                if (window.Telegram?.WebApp?.showAlert) {
-                    window.Telegram.WebApp.showAlert('Не удалось создать ссылку. Попробуйте позже.');
-                }
-            }
-        });
     }
 }
