@@ -360,7 +360,6 @@ function initMenuHandlers() {
             switchSection('game-section');
             
             // Можно добавить логику для запуска конкретного урока
-            // Например, активировать режим ритма с определенными настройками
             console.log('Запуск урока');
         });
     });
@@ -368,7 +367,16 @@ function initMenuHandlers() {
     // Обработчик для кнопки приглашения друзей
     const inviteButton = document.getElementById('invite-friends-btn');
     if (inviteButton) {
-        inviteButton.addEventListener('click', shareReferralLink);
+        inviteButton.addEventListener('click', async function() {
+            if (window.referralSystem) {
+                await window.referralSystem.shareReferralLink();
+            } else {
+                console.error('Реферальная система не инициализирована');
+                if (window.Telegram?.WebApp?.showAlert) {
+                    window.Telegram.WebApp.showAlert('Не удалось поделиться ссылкой. Попробуйте позже.');
+                }
+            }
+        });
     }
 }
 
@@ -655,55 +663,6 @@ function createDJPads() {
     } catch (error) {
         console.error('Ошибка при создании DJ-падов:', error);
         return false;
-    }
-}
-
-// Функция для шаринга реферальной ссылки
-async function shareReferralLink() {
-    try {
-        console.log('Попытка шаринга реферальной ссылки');
-        
-        // Проверяем, что Telegram WebApp инициализирован
-        if (!window.Telegram?.WebApp) {
-            console.error('Telegram WebApp не инициализирован');
-            return;
-        }
-
-        // Получаем данные пользователя из Telegram
-        const telegramUser = window.Telegram.WebApp.initDataUnsafe?.user;
-        if (!telegramUser) {
-            console.warn('Данные пользователя Telegram недоступны');
-            return;
-        }
-
-        // Получаем реферальную ссылку
-        const referralLink = window.referralSystem?.getReferralLink() || 'https://t.me/your_bot?start=12345';
-        console.log('Реферальная ссылка:', referralLink);
-
-        // Проверяем доступность метода showShareSheet
-        if (typeof window.Telegram.WebApp.showShareSheet === 'function') {
-            // Показываем системное окно выбора чата
-            window.Telegram.WebApp.showShareSheet({
-                title: '🎵 Присоединяйся к Melodix DJ Pads!',
-                text: '🎮 Создавай музыку и зарабатывай бонусы!',
-                url: referralLink
-            });
-        } else {
-            // Запасной вариант, если метод недоступен
-            console.warn('Метод showShareSheet недоступен');
-            if (window.Telegram?.WebApp?.showAlert) {
-                window.Telegram.WebApp.showAlert('Функция шаринга недоступна в вашей версии Telegram');
-            }
-        }
-
-    } catch (error) {
-        console.error('Ошибка при шаринге:', error);
-        // Показываем ошибку пользователю
-        if (window.Telegram?.WebApp?.showAlert) {
-            window.Telegram.WebApp.showAlert('Произошла ошибка при отправке ссылки');
-        } else {
-            alert('Произошла ошибка при отправке ссылки');
-        }
     }
 }
 
