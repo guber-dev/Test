@@ -73,7 +73,7 @@ serve(async (req) => {
       throw new Error('TELEGRAM_BOT_TOKEN не найден')
     }
 
-    // Вызываем Telegram Bot API
+    // Вызываем Telegram Bot API v6.9
     const response = await fetch(
       `https://api.telegram.org/bot${BOT_TOKEN}/savePreparedInlineMessage`,
       {
@@ -88,7 +88,15 @@ serve(async (req) => {
             id: crypto.randomUUID(),
             title: '🎵 Melodix DJ Pads',
             message_text: `🎵 Присоединяйся к Melodix DJ Pads!\n\n🎮 Создавай музыку и зарабатывай бонусы!\n\n${referral_link}`,
-            parse_mode: 'HTML'
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [{
+                  text: '🎵 Открыть Melodix DJ Pads',
+                  url: referral_link
+                }]
+              ]
+            }
           },
           allow_user_chats: true,
           allow_group_chats: true,
