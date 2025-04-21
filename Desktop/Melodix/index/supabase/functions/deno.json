@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["esnext", "dom", "dom.iterable", "dom.asynciterable"],
+    "strict": true
+  },
+  "imports": {
+    "http/": "https://deno.land/std@0.177.0/http/"
+  }
+} 
