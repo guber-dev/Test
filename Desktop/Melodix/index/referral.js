@@ -238,22 +238,39 @@ class ReferralSystem {
         }
         
         try {
-            // Формируем текст для шаринга
-            const shareText = `🎵 Присоединяйся к Melodix DJ Pads!\n\n🎮 Создавай музыку и зарабатывай бонусы!\n\n${referralLink}`;
+            // Подготавливаем сообщение через Bot API
+            const response = await fetch('/api/prepare-share-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: this.currentUser.telegram_id,
+                    referral_link: referralLink
+                })
+            });
 
-            // Используем правильный метод WebApp API для шаринга
-            if (window.Telegram?.WebApp) {
-                window.Telegram.WebApp.shareMessage(shareText);
+            const result = await response.json();
+            
+            if (!result.prepared_message_id) {
+                throw new Error('Не удалось подготовить сообщение');
+            }
+
+            // Открываем диалог шаринга с подготовленным сообщением через shareMessage
+            if (window.Telegram?.WebApp?.shareMessage) {
+                Telegram.WebApp.shareMessage(result.prepared_message_id, (ok) => {
+                    if (ok) {
+                        Telegram.WebApp.showAlert("Ссылка успешно отправлена!");
+                    } else {
+                        Telegram.WebApp.showAlert("Не удалось отправить ссылку");
+                    }
+                });
                 return true;
             } else {
-                console.error('Telegram WebApp API недоступен');
-                return false;
+                throw new Error('Telegram WebApp API недоступен или не поддерживает shareMessage');
             }
         } catch (error) {
-            console.error('Ошибка при шаринге:', error);
-            if (window.Telegram?.WebApp?.showAlert) {
-                window.Telegram.WebApp.showAlert('Не удалось отправить сообщение');
-            }
+            console.error('Ошибка при шаринге ссылки:', error);
             return false;
         }
     }

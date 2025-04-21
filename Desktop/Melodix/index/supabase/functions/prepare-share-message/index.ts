@@ -82,25 +82,17 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_id,
-          result: {
-            type: 'article',
-            id: crypto.randomUUID(),
-            title: '🎵 Melodix DJ Pads',
-            message_text: `🎵 Присоединяйся к Melodix DJ Pads!\n\n🎮 Создавай музыку и зарабатывай бонусы!\n\n${referral_link}`,
-            parse_mode: 'HTML',
+          web_app_name: "melodix",
+          message: {
+            text: `🎵 Присоединяйся к Melodix DJ Pads!\n\n🎮 Создавай музыку и зарабатывай бонусы!\n\n${referral_link}`,
+            parse_mode: "HTML",
             reply_markup: {
-              inline_keyboard: [
-                [{
-                  text: '🎵 Открыть Melodix DJ Pads',
-                  url: referral_link
-                }]
-              ]
+              inline_keyboard: [[{
+                text: "🎵 Открыть Melodix DJ Pads",
+                url: referral_link
+              }]]
             }
-          },
-          allow_user_chats: true,
-          allow_group_chats: true,
-          allow_channel_chats: true
+          }
         })
       }
     )

@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+Используй последнюю версию Telegram Bot API (https://core.telegram.org/bots/api)
+
+- You can @ files here
+- You can use markdown but dont have to
