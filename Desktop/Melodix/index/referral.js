@@ -248,12 +248,19 @@ class ReferralSystem {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'apikey': SUPABASE_ANON_KEY
                 },
                 body: JSON.stringify({
                     user_id: this.currentUser.telegram_id,
                     referral_link: referralLink
                 })
             });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Ошибка сервера: ${errorData.error || response.statusText}`);
+            }
 
             const result = await response.json();
             
@@ -276,6 +283,9 @@ class ReferralSystem {
             }
         } catch (error) {
             console.error('Ошибка при шаринге ссылки:', error);
+            if (window.Telegram?.WebApp?.showAlert) {
+                window.Telegram.WebApp.showAlert(`Ошибка: ${error.message}`);
+            }
             return false;
         }
     }
