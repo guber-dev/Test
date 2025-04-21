@@ -289,6 +289,50 @@ class ReferralSystem {
             return false;
         }
     }
+
+    // Шаринг через нативный deeplink
+    async shareViaDeeplink() {
+        const referralLink = this.getReferralLink();
+        
+        if (!referralLink) {
+            console.error('Не удалось получить реферальную ссылку');
+            return false;
+        }
+
+        try {
+            const text = `🎵 Присоединяйся к Melodix DJ Pads!\n\nСоздавай биты и зарабатывай бонусы!\n\n${referralLink}`;
+            const encodedText = encodeURIComponent(text);
+            const encodedUrl = encodeURIComponent(referralLink);
+            const deeplink = `tg://msg_url?url=${encodedUrl}&text=${encodedText}`;
+            
+            window.location.href = deeplink;
+            return true;
+        } catch (error) {
+            console.error('Ошибка при создании deeplink:', error);
+            return false;
+        }
+    }
+
+    // Шаринг через URL
+    async shareViaUrl() {
+        const referralLink = this.getReferralLink();
+        
+        if (!referralLink) {
+            console.error('Не удалось получить реферальную ссылку');
+            return false;
+        }
+
+        try {
+            const text = `🎵 Присоединяйся к Melodix DJ Pads!\n\nСоздавай биты и зарабатывай бонусы!`;
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(text)}`;
+            
+            window.open(shareUrl, '_blank');
+            return true;
+        } catch (error) {
+            console.error('Ошибка при создании share URL:', error);
+            return false;
+        }
+    }
 }
 
 // Создаем глобальный экземпляр реферальной системы
@@ -326,5 +370,38 @@ async function updateReferralStats() {
         console.log('Статистика реферальной системы обновлена:', stats);
     } catch (error) {
         console.error('Ошибка при обновлении статистики:', error);
+    }
+}
+
+// Инициализируем обработчики меню
+function initMenuHandlers() {
+    // Обработчик для кнопки шаринга через deeplink
+    const shareDeeplinkButton = document.getElementById('share-deeplink-btn');
+    if (shareDeeplinkButton) {
+        shareDeeplinkButton.addEventListener('click', async function() {
+            if (window.referralSystem) {
+                await window.referralSystem.shareViaDeeplink();
+            } else {
+                console.error('Реферальная система не инициализирована');
+                if (window.Telegram?.WebApp?.showAlert) {
+                    window.Telegram.WebApp.showAlert('Не удалось создать ссылку. Попробуйте позже.');
+                }
+            }
+        });
+    }
+
+    // Обработчик для кнопки шаринга через URL
+    const shareUrlButton = document.getElementById('share-url-btn');
+    if (shareUrlButton) {
+        shareUrlButton.addEventListener('click', async function() {
+            if (window.referralSystem) {
+                await window.referralSystem.shareViaUrl();
+            } else {
+                console.error('Реферальная система не инициализирована');
+                if (window.Telegram?.WebApp?.showAlert) {
+                    window.Telegram.WebApp.showAlert('Не удалось создать ссылку. Попробуйте позже.');
+                }
+            }
+        });
     }
 }
