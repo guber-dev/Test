@@ -518,6 +518,9 @@ function initAudioContext() {
                 audioContext.resume();
             }
             console.log('AudioContext инициализирован:', audioContext.state);
+
+            // Создаем глобальный узел назначения для записи
+            window.__recordingDestination = audioContext.createMediaStreamDestination();
         }
     } catch (error) {
         console.error('Ошибка при инициализации AudioContext:', error);
@@ -580,6 +583,7 @@ function playSound(pad) {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(audioContext.destination);
+        source.connect(window.__recordingDestination); // Подключаем к узлу записи
         source.start(0);
 
         // Добавляем класс для анимации
@@ -701,7 +705,7 @@ function startRecording() {
     if (!audioContext) {
         initAudioContext();
     }
-    
+
     // Проверяем поддержку MediaRecorder
     if (!window.MediaRecorder) {
         console.error('MediaRecorder не поддерживается в этом браузере');
@@ -710,14 +714,14 @@ function startRecording() {
         }
         return;
     }
-    
+
     try {
         // Очищаем предыдущие источники
         audioSourceNodes.clear();
-        
-        // Создаем узел назначения для записи
-        const dest = audioContext.createMediaStreamDestination();
-        
+
+        // Используем глобальный узел назначения для записи
+        const dest = window.__recordingDestination;
+
         // Подключаем все звуки к узлу записи
         document.querySelectorAll('.pad audio').forEach(audioElement => {
             // Используем новый источник для каждого аудио элемента
@@ -726,7 +730,7 @@ function startRecording() {
             source.connect(dest);
             source.connect(audioContext.destination); // Чтобы звук был слышен во время записи
         });
-        
+
         // Определяем поддерживаемый MIME-тип
         const mimeTypes = [
             'audio/webm',
@@ -735,9 +739,9 @@ function startRecording() {
             'audio/wav',
             ''  // Пустая строка означает использование браузерного стандарта по умолчанию
         ];
-        
+
         let mimeType = '';
-        
+
         // Проверяем поддержку MIME-типов
         for (let type of mimeTypes) {
             if (type && MediaRecorder.isTypeSupported(type)) {
@@ -746,27 +750,27 @@ function startRecording() {
                 break;
             }
         }
-        
+
         // Инициализируем MediaRecorder с проверенным MIME-типом
         const options = mimeType ? { mimeType } : {};
         console.log('Создаем MediaRecorder с опциями:', options);
-        
+
         mediaRecorder = new MediaRecorder(dest.stream, options);
         recordedChunks = [];
-        
+
         // Обработчик для сбора данных
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
                 recordedChunks.push(event.data);
             }
         };
-        
+
         // Обработчик окончания записи
         mediaRecorder.onstop = handleRecordingStopped;
-        
+
         // Начинаем запись
         mediaRecorder.start();
-        
+
         // Обновляем интерфейс
         const startButton = document.querySelector('.record-button.start');
         const stopButton = document.querySelector('.record-button.stop');
@@ -774,7 +778,7 @@ function startRecording() {
             startButton.style.display = 'none';
             stopButton.style.display = 'block';
         }
-        
+
         // Показываем уведомление
         if (window.Telegram?.WebApp?.showPopup) {
             window.Telegram.WebApp.showPopup({
@@ -783,9 +787,9 @@ function startRecording() {
                 buttons: [{type: 'default', text: 'OK'}]
             });
         }
-        
+
         console.log('Запись начата');
-        
+
     } catch (error) {
         console.error('Ошибка при начале записи:', error);
         if (window.Telegram?.WebApp?.showAlert) {

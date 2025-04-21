@@ -238,8 +238,13 @@ class ReferralSystem {
         }
         
         try {
+            // Проверка валидности реферальной ссылки
+            if (!referralLink || !referralLink.startsWith('https://t.me/')) {
+                console.error('Некорректная ссылка для шаринга:', referralLink);
+                return false;
+            }
             // Подготавливаем сообщение через Bot API
-            const response = await fetch('/api/prepare-share-message', {
+            const response = await fetch('https://ljeiynmocwcltbzhktqr.supabase.co/functions/v1/prepare-share-message', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
