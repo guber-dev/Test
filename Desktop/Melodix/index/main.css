@@ -549,53 +549,35 @@ body {
 
 /* Стили для реферальной системы */
 .referral-container {
-    margin-top: auto;
-    padding: 20px;
-    width: 100%;
-    max-width: 400px;
     display: flex;
     flex-direction: column;
+    gap: 10px;
+    padding: 20px;
     align-items: center;
-    margin-bottom: calc(20px + var(--safe-area-inset-bottom, 0px));
 }
 
-.invite-button {
-    background: linear-gradient(180deg, #E42929 0%, #B71C1C 100%);
-    color: white;
+.action-button {
+    background: var(--tg-theme-button-color, #3390ec);
+    color: var(--tg-theme-button-text-color, #ffffff);
     border: none;
-    border-radius: 25px;
-    padding: 12px 25px;
+    border-radius: 8px;
+    padding: 12px 20px;
     font-size: 16px;
     font-weight: 500;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s ease;
     width: 100%;
-    max-width: 250px;
+    max-width: 300px;
+    transition: opacity 0.2s ease;
 }
 
-.invite-button i {
-    margin-right: 10px;
-    font-size: 18px;
-}
-
-.invite-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-}
-
-.invite-button:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+.action-button:active {
+    opacity: 0.8;
 }
 
 .referral-info {
-    margin-top: 12px;
+    margin-top: 10px;
+    color: var(--tg-theme-hint-color, #999999);
     font-size: 14px;
-    color: #999;
     text-align: center;
 }
 
