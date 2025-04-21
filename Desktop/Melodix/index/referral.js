@@ -237,43 +237,39 @@ class ReferralSystem {
         }
         
         try {
-            // Если доступно Telegram API, используем его для шаринга
-            if (window.Telegram?.WebApp?.showPopup) {
-                window.Telegram.WebApp.showPopup({
-                    title: 'Ваша реферальная ссылка',
-                    message: 'Отправьте эту ссылку друзьям, чтобы получить бонусы!',
-                    buttons: [
-                        {type: 'default', text: 'Копировать', id: 'copy'},
-                        {type: 'cancel', text: 'Закрыть'}
-                    ]
-                }, function(buttonId) {
-                    if (buttonId === 'copy') {
-                        navigator.clipboard.writeText(referralLink)
-                            .then(() => {
-                                window.Telegram.WebApp.showAlert('Ссылка скопирована!');
-                            })
-                            .catch(err => {
-                                console.error('Ошибка при копировании:', err);
-                                window.Telegram.WebApp.showAlert('Не удалось скопировать ссылку');
-                            });
-                    }
-                });
-                return true;
-            } else if (navigator.share) {
-                // Используем Web Share API, если доступно
-                await navigator.share({
-                    title: 'Присоединяйся к Melodix DJ Pads!',
-                    text: 'Попробуй крутое приложение для создания музыки!',
-                    url: referralLink
+            // Получаем prepared_message_id с сервера
+            const response = await fetch('/api/prepare-share-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: this.currentUser.telegram_id,
+                    referral_link: referralLink
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Не удалось получить prepared_message_id');
+            }
+
+            const { prepared_message_id } = await response.json();
+
+            // Используем WebApp API для шаринга с prepared_message_id
+            if (window.Telegram?.WebApp) {
+                window.Telegram.WebApp.sendMessage({ 
+                    prepared_message_id: prepared_message_id 
                 });
                 return true;
             } else {
-                // Запасной вариант - просто показываем ссылку
-                alert(`Ваша реферальная ссылка: ${referralLink}`);
-                return true;
+                console.error('Telegram WebApp API недоступен');
+                return false;
             }
         } catch (error) {
-            console.error('Ошибка при шаринге реферальной ссылки:', error);
+            console.error('Ошибка при шаринге:', error);
+            if (window.Telegram?.WebApp?.showAlert) {
+                window.Telegram.WebApp.showAlert('Не удалось создать сообщение для отправки');
+            }
             return false;
         }
     }
