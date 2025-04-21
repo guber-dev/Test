@@ -602,14 +602,18 @@ body {
 /* Стили для элементов записи */
 .recording-controls {
     position: fixed;
-    bottom: 80px;
+    bottom: 120px; /* Увеличиваем отступ снизу */
     left: 0;
     right: 0;
     display: flex;
     justify-content: center;
     gap: 20px;
-    z-index: 100;
-    padding: 10px;
+    z-index: 100; /* Увеличиваем z-index для уверенности, что кнопки будут поверх других элементов */
+    padding: 10px; /* Добавляем отступы */
+    background: rgba(0, 0, 0, 0.3); /* Добавляем полупрозрачный фон */
+    backdrop-filter: blur(5px); /* Добавляем размытие фона */
+    border-radius: 20px; /* Скругляем углы */
+    margin: 0 20px; /* Добавляем отступы по бокам */
 }
 
 .record-button {
