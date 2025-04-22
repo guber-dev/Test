@@ -24,6 +24,9 @@ let lastFileName = null; // Хранит имя файла последней з
 // Кэш декодированных буферов
 let audioBuffers = new Map();
 
+// Глобальные переменные
+let currentSong = null;
+
 // Настройка цветов и темы для Telegram Mini App
 function setupTelegramColors() {
   try {
@@ -1038,4 +1041,35 @@ function downloadRecording() {
             window.Telegram.WebApp.showAlert('Ошибка при скачивании записи: ' + error.message);
         }
     }
+}
+
+// Обработчики событий
+function setupEventListeners() {
+    // Обработчик выбора песни
+    document.querySelectorAll('.play-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const songCard = this.closest('.song-card');
+            if (songCard.classList.contains('locked')) {
+                return;
+            }
+            
+            currentSong = {
+                id: songCard.dataset.songId,
+                name: songCard.querySelector('.song-name').textContent
+            };
+            
+            // Скрываем список песен и показываем дрампад
+            document.querySelector('.songs-list').style.display = 'none';
+            document.querySelector('.drum-pad-section').style.display = 'block';
+            
+            // Инициализируем дрампад для выбранной песни
+            initDrumPad();
+        });
+    });
+}
+
+// Инициализация дрампада
+function initDrumPad() {
+    // Здесь будет код инициализации дрампада для выбранной песни
+    console.log('Инициализация дрампада для песни:', currentSong);
 }
