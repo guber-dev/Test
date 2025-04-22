@@ -107,6 +107,54 @@
                 </div>
             </div>
         </div>
+
+        <!-- Секция со списком песен -->
+        <div class="songs-list">
+            <h2 class="songs-title">Выберите песню</h2>
+            <div class="songs-grid">
+                <!-- Доступная песня -->
+                <div class="song-card active">
+                    <div class="song-cover">
+                        <img src="https://source.unsplash.com/random/300x300/?music,drum" alt="First Beat">
+                        <div class="song-status">Доступно</div>
+                    </div>
+                    <div class="song-info">
+                        <h3 class="song-name">First Beat</h3>
+                        <p class="song-description">Попробуйте создать свой первый бит</p>
+                    </div>
+                    <button class="play-button">Играть</button>
+                </div>
+
+                <!-- Недоступные песни -->
+                <div class="song-card locked">
+                    <div class="song-cover">
+                        <img src="https://source.unsplash.com/random/300x300/?urban,music" alt="Urban Groove">
+                        <div class="song-status">Скоро</div>
+                    </div>
+                    <div class="song-info">
+                        <h3 class="song-name">Urban Groove</h3>
+                        <p class="song-description">Городские ритмы</p>
+                    </div>
+                    <button class="play-button" disabled>Скоро</button>
+                </div>
+
+                <div class="song-card locked">
+                    <div class="song-cover">
+                        <img src="https://source.unsplash.com/random/300x300/?drum,music" alt="Drum Master">
+                        <div class="song-status">Скоро</div>
+                    </div>
+                    <div class="song-info">
+                        <h3 class="song-name">Drum Master</h3>
+                        <p class="song-description">Сложные ритмы</p>
+                    </div>
+                    <button class="play-button" disabled>Скоро</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Секция с дрампадом (изначально скрыта) -->
+        <div class="drum-pad-section" style="display: none;">
+        </div>
     </div>
     
     <!-- Нижнее меню -->
