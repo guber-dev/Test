@@ -36,8 +36,12 @@ class ReferralSystem {
             // Получаем или создаем пользователя в базе данных
             this.currentUser = await this.getOrCreateUser(telegramUser);
             
-            // Проверяем наличие реферального кода в URL
-            this.checkReferralCodeInUrl();
+            // Проверяем наличие реферального кода в tgWebAppStartParam
+            const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+            if (startParam) {
+                console.log('Получен start_param:', startParam);
+                await this.processReferral(startParam);
+            }
             
             return true;
         } catch (error) {
@@ -195,6 +199,7 @@ class ReferralSystem {
         if (!this.currentUser || !this.referralCode) {
             return null;
         }
+        // Используем формат для открытия мини-приложения с параметром startapp
         return `https://t.me/MelodixCryptoBot/app?startapp=${this.referralCode}`;
     }
 
