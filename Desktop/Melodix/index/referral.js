@@ -199,8 +199,8 @@ class ReferralSystem {
         if (!this.currentUser || !this.referralCode) {
             return null;
         }
-        // Используем формат для открытия мини-приложения с параметром startapp
-        return `https://t.me/MelodixCryptoBot/app?startapp=${this.referralCode}`;
+        // Используем стандартный формат для ботов Telegram
+        return `https://t.me/MelodixCryptoBot?start=${this.referralCode}`;
     }
 
     // Получение статистики приглашений
