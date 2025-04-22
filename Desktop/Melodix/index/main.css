@@ -762,112 +762,77 @@ body {
 .songs-list {
     padding: 20px;
     padding-top: calc(20px + var(--safe-area-inset-top, 0px));
-    max-width: 1200px;
+    max-width: 800px;
     margin: 0 auto;
-    min-height: calc(100vh - 60px);
 }
 
 .songs-title {
     font-size: 24px;
-    color: var(--text-color);
+    color: var(--tg-theme-text-color, #FFFFFF);
     margin-bottom: 20px;
     text-align: center;
 }
 
 .songs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     padding: 10px;
 }
 
 .song-card {
-    background: var(--card-bg);
+    background: var(--tg-theme-bg-color, rgba(255, 255, 255, 0.1));
     border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    position: relative;
+    padding: 16px;
+    transition: transform 0.2s ease;
 }
 
-.song-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-
-.song-cover {
-    position: relative;
-    width: 100%;
-    padding-top: 100%;
-    overflow: hidden;
-}
-
-.song-cover img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.song-status {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.song-card.active .song-status {
-    background: var(--accent-color);
-    color: white;
-}
-
-.song-card.locked .song-status {
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
+.song-card:active {
+    transform: scale(0.98);
 }
 
 .song-info {
-    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .song-name {
     font-size: 18px;
     font-weight: 600;
-    color: var(--text-color);
-    margin-bottom: 5px;
+    color: var(--tg-theme-text-color, #FFFFFF);
+    margin: 0;
 }
 
 .song-description {
     font-size: 14px;
-    color: var(--secondary-text-color);
-    margin-bottom: 15px;
+    color: var(--tg-theme-hint-color, rgba(255, 255, 255, 0.7));
+    margin: 0;
 }
 
 .play-button {
     width: 100%;
-    padding: 10px;
-    background: var(--accent-color);
-    color: white;
+    padding: 12px;
+    background: var(--tg-theme-button-color, #2481cc);
+    color: var(--tg-theme-button-text-color, #FFFFFF);
     border: none;
     border-radius: 8px;
     font-size: 16px;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: opacity 0.2s ease;
+    margin-top: 8px;
 }
 
-.play-button:hover {
-    background: var(--accent-hover-color);
+.play-button:active {
+    opacity: 0.8;
 }
 
-.play-button:disabled {
-    background: var(--disabled-color);
-    cursor: not-allowed;
+/* Удаляем неиспользуемые стили */
+.song-cover,
+.song-status,
+.back-button {
+    display: none;
 }
 
 /* Адаптивные стили */

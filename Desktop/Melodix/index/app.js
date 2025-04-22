@@ -348,6 +348,11 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Telegram WebApp API доступен');
             window.Telegram.WebApp.ready();
             setupTelegramColors();
+            
+            // Скрываем кнопку "назад" при запуске
+            if (window.Telegram.WebApp.BackButton) {
+                window.Telegram.WebApp.BackButton.hide();
+            }
         } else {
             console.warn('Telegram WebApp API недоступен');
         }
@@ -398,8 +403,25 @@ document.querySelectorAll('.play-button').forEach(button => {
         
         // Создаем пады с новым набором звуков
         createDJPads();
+
+        // Показываем нативную кнопку "назад"
+        if (window.Telegram?.WebApp?.BackButton) {
+            window.Telegram.WebApp.BackButton.show();
+        }
     });
 });
+
+// Добавляем обработчик для нативной кнопки "назад"
+if (window.Telegram?.WebApp?.BackButton) {
+    window.Telegram.WebApp.BackButton.onClick(() => {
+        // Показываем список песен и скрываем дрампад
+        document.querySelector('.songs-list').style.display = 'block';
+        document.querySelector('.drum-pad-section').style.display = 'none';
+        
+        // Скрываем кнопку "назад"
+        window.Telegram.WebApp.BackButton.hide();
+    });
+}
 
 // Добавляем кнопку "Назад" для возврата к списку песен
 function addBackButton() {

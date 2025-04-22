@@ -50,10 +50,6 @@
 <body>
     <!-- Контейнер для скролла внутри приложения -->
     <div class="app-container">
-        <button class="back-button" onclick="window.history.back()">
-            <i class="fas fa-arrow-left"></i>
-        </button>
-        
         <!-- Раздел "Игра" (DJ-пады) -->
         <div id="game-section" class="section-container active">
             <!-- Секция со списком песен -->
@@ -62,61 +58,44 @@
                 <div class="songs-grid">
                     <!-- Классические ударные -->
                     <div class="song-card active">
-                        <div class="song-cover">
-                            <img src="https://source.unsplash.com/random/300x300/?drum,classic" alt="Classic Drums">
-                            <div class="song-status">Доступно</div>
-                        </div>
                         <div class="song-info">
                             <h3 class="song-name">Classic Drums</h3>
                             <p class="song-description">Классические ударные для создания битов</p>
+                            <button class="play-button">Играть</button>
                         </div>
-                        <button class="play-button">Играть</button>
                     </div>
 
                     <!-- Хардбасс -->
                     <div class="song-card">
-                        <div class="song-cover">
-                            <img src="https://source.unsplash.com/random/300x300/?hardbass,music" alt="Hardbass Mix">
-                            <div class="song-status">Доступно</div>
-                        </div>
                         <div class="song-info">
                             <h3 class="song-name">Hardbass Mix</h3>
                             <p class="song-description">Мощные басы и энергичные ритмы</p>
+                            <button class="play-button">Играть</button>
                         </div>
-                        <button class="play-button">Играть</button>
                     </div>
 
                     <!-- Фонк -->
                     <div class="song-card">
-                        <div class="song-cover">
-                            <img src="https://source.unsplash.com/random/300x300/?phonk,music" alt="Phonk Vibes">
-                            <div class="song-status">Доступно</div>
-                        </div>
                         <div class="song-info">
                             <h3 class="song-name">Phonk Vibes</h3>
                             <p class="song-description">Мемфис-рэп и современные биты</p>
+                            <button class="play-button">Играть</button>
                         </div>
-                        <button class="play-button">Играть</button>
                     </div>
 
                     <!-- Хип-хоп -->
                     <div class="song-card">
-                        <div class="song-cover">
-                            <img src="https://source.unsplash.com/random/300x300/?hiphop,music" alt="Hip-Hop Beats">
-                            <div class="song-status">Доступно</div>
-                        </div>
                         <div class="song-info">
                             <h3 class="song-name">Hip-Hop Beats</h3>
                             <p class="song-description">Классические хип-хоп ритмы</p>
+                            <button class="play-button">Играть</button>
                         </div>
-                        <button class="play-button">Играть</button>
                     </div>
                 </div>
             </div>
 
             <!-- Секция с дрампадом (изначально скрыта) -->
             <div class="drum-pad-section" style="display: none;">
-                <!-- DJ-пады будут добавлены динамически -->
             </div>
         </div>
         
