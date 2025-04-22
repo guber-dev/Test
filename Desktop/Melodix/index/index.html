@@ -53,9 +53,71 @@
         <button class="back-button" onclick="window.history.back()">
             <i class="fas fa-arrow-left"></i>
         </button>
+        
         <!-- Раздел "Игра" (DJ-пады) -->
         <div id="game-section" class="section-container active">
-            <!-- Здесь будут DJ-пады -->
+            <!-- Секция со списком песен -->
+            <div class="songs-list">
+                <h2 class="songs-title">Выберите песню</h2>
+                <div class="songs-grid">
+                    <!-- Классические ударные -->
+                    <div class="song-card active">
+                        <div class="song-cover">
+                            <img src="https://source.unsplash.com/random/300x300/?drum,classic" alt="Classic Drums">
+                            <div class="song-status">Доступно</div>
+                        </div>
+                        <div class="song-info">
+                            <h3 class="song-name">Classic Drums</h3>
+                            <p class="song-description">Классические ударные для создания битов</p>
+                        </div>
+                        <button class="play-button">Играть</button>
+                    </div>
+
+                    <!-- Хардбасс -->
+                    <div class="song-card">
+                        <div class="song-cover">
+                            <img src="https://source.unsplash.com/random/300x300/?hardbass,music" alt="Hardbass Mix">
+                            <div class="song-status">Доступно</div>
+                        </div>
+                        <div class="song-info">
+                            <h3 class="song-name">Hardbass Mix</h3>
+                            <p class="song-description">Мощные басы и энергичные ритмы</p>
+                        </div>
+                        <button class="play-button">Играть</button>
+                    </div>
+
+                    <!-- Фонк -->
+                    <div class="song-card">
+                        <div class="song-cover">
+                            <img src="https://source.unsplash.com/random/300x300/?phonk,music" alt="Phonk Vibes">
+                            <div class="song-status">Доступно</div>
+                        </div>
+                        <div class="song-info">
+                            <h3 class="song-name">Phonk Vibes</h3>
+                            <p class="song-description">Мемфис-рэп и современные биты</p>
+                        </div>
+                        <button class="play-button">Играть</button>
+                    </div>
+
+                    <!-- Хип-хоп -->
+                    <div class="song-card">
+                        <div class="song-cover">
+                            <img src="https://source.unsplash.com/random/300x300/?hiphop,music" alt="Hip-Hop Beats">
+                            <div class="song-status">Доступно</div>
+                        </div>
+                        <div class="song-info">
+                            <h3 class="song-name">Hip-Hop Beats</h3>
+                            <p class="song-description">Классические хип-хоп ритмы</p>
+                        </div>
+                        <button class="play-button">Играть</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Секция с дрампадом (изначально скрыта) -->
+            <div class="drum-pad-section" style="display: none;">
+                <!-- DJ-пады будут добавлены динамически -->
+            </div>
         </div>
         
         <!-- Раздел "Уроки" -->
@@ -110,68 +172,6 @@
                     <div class="referral-info">Приглашайте друзей и получайте бонусы!</div>
                 </div>
             </div>
-        </div>
-
-        <!-- Секция со списком песен -->
-        <div class="songs-list">
-            <h2 class="songs-title">Выберите песню</h2>
-            <div class="songs-grid">
-                <!-- Классические ударные -->
-                <div class="song-card active">
-                    <div class="song-cover">
-                        <img src="https://source.unsplash.com/random/300x300/?drum,classic" alt="Classic Drums">
-                        <div class="song-status">Доступно</div>
-                    </div>
-                    <div class="song-info">
-                        <h3 class="song-name">Classic Drums</h3>
-                        <p class="song-description">Классические ударные для создания битов</p>
-                    </div>
-                    <button class="play-button">Играть</button>
-                </div>
-
-                <!-- Хардбасс -->
-                <div class="song-card">
-                    <div class="song-cover">
-                        <img src="https://source.unsplash.com/random/300x300/?hardbass,music" alt="Hardbass Mix">
-                        <div class="song-status">Доступно</div>
-                    </div>
-                    <div class="song-info">
-                        <h3 class="song-name">Hardbass Mix</h3>
-                        <p class="song-description">Мощные басы и энергичные ритмы</p>
-                    </div>
-                    <button class="play-button">Играть</button>
-                </div>
-
-                <!-- Фонк -->
-                <div class="song-card">
-                    <div class="song-cover">
-                        <img src="https://source.unsplash.com/random/300x300/?phonk,music" alt="Phonk Vibes">
-                        <div class="song-status">Доступно</div>
-                    </div>
-                    <div class="song-info">
-                        <h3 class="song-name">Phonk Vibes</h3>
-                        <p class="song-description">Мемфис-рэп и современные биты</p>
-                    </div>
-                    <button class="play-button">Играть</button>
-                </div>
-
-                <!-- Хип-хоп -->
-                <div class="song-card">
-                    <div class="song-cover">
-                        <img src="https://source.unsplash.com/random/300x300/?hiphop,music" alt="Hip-Hop Beats">
-                        <div class="song-status">Доступно</div>
-                    </div>
-                    <div class="song-info">
-                        <h3 class="song-name">Hip-Hop Beats</h3>
-                        <p class="song-description">Классические хип-хоп ритмы</p>
-                    </div>
-                    <button class="play-button">Играть</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Секция с дрампадом (изначально скрыта) -->
-        <div class="drum-pad-section" style="display: none;">
         </div>
     </div>
     

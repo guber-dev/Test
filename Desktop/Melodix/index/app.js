@@ -202,20 +202,25 @@ function exitFullscreenMode() {
 
 // Переключение между секциями
 function switchSection(sectionId) {
+    console.log('Переключение на секцию:', sectionId);
+    
     // Скрываем все секции
     document.querySelectorAll('.section-container').forEach(section => {
         section.classList.remove('active');
+        section.style.display = 'none';
     });
     
     // Показываем выбранную секцию
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
         targetSection.classList.add('active');
+        targetSection.style.display = 'block';
         currentSection = sectionId;
         
-        // Если это секция игры, убедимся, что DJ-пады созданы
-        if (sectionId === 'game-section' && !document.querySelector('#game-section .pad')) {
-            createDJPads();
+        // Если это секция игры, показываем список песен
+        if (sectionId === 'game-section') {
+            document.querySelector('.songs-list').style.display = 'block';
+            document.querySelector('.drum-pad-section').style.display = 'none';
         }
     }
     
@@ -342,7 +347,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (window.Telegram && window.Telegram.WebApp) {
             console.log('Telegram WebApp API доступен');
             window.Telegram.WebApp.ready();
-            // Запрашиваем полноэкранный режим после инициализации
             setupTelegramColors();
         } else {
             console.warn('Telegram WebApp API недоступен');
@@ -356,38 +360,16 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelector('.drum-pad-section').style.display = 'none';
         
         // Инициализируем обработчики меню
-        try {
-            if (typeof initMenuHandlers === 'function') {
-                initMenuHandlers();
-            }
-        } catch (e) {
-            console.error('Ошибка при инициализации обработчиков меню:', e);
-        }
+        initMenuHandlers();
         
         // Загружаем данные пользователя
-        try {
-            if (typeof loadUserData === 'function') {
-                loadUserData();
-            }
-        } catch (e) {
-            console.error('Ошибка при загрузке данных пользователя:', e);
-        }
+        loadUserData();
         
         // Показываем секцию игры по умолчанию
-        try {
-            if (typeof switchSection === 'function') {
-                switchSection('game-section');
-            }
-        } catch (e) {
-            console.error('Ошибка при переключении секции:', e);
-        }
+        switchSection('game-section');
         
-        // Предотвращаем случайное закрытие - важно для UX
-        try {
-            preventAccidentalClose();
-        } catch (e) {
-            console.error('Ошибка при настройке предотвращения закрытия:', e);
-        }
+        // Предотвращаем случайное закрытие
+        preventAccidentalClose();
         
         console.log('Приложение инициализировано');
     } catch (error) {
