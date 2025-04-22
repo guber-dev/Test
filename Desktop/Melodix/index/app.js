@@ -27,6 +27,68 @@ let audioBuffers = new Map();
 // Глобальные переменные
 let currentSong = null;
 
+// Глобальные переменные для звуков
+const soundSets = {
+    classic: [
+        { src: './sounds/TomM.mp3', label: 'Bass Drum' },
+        { src: './sounds/Snare01.mp3', label: 'Snare' },
+        { src: './sounds/Hat.mp3', label: 'Hi-Hat' },
+        { src: './sounds/Rim.mp3', label: 'Rim' },
+        { src: './sounds/TomF.mp3', label: 'Tom' },
+        { src: './sounds/Crash01.mp3', label: 'Crash' },
+        { src: './sounds/Hat_Open.mp3', label: 'Open Hat' },
+        { src: './sounds/Crash_02.mp3', label: 'Crash 2' },
+        { src: './sounds/Ride01.mp3', label: 'Ride' },
+        { src: './sounds/Ride02.mp3', label: 'Ride 2' },
+        { src: './sounds/TomL.mp3', label: 'Tom L' },
+        { src: './sounds/Shake.mp3', label: 'Shake' }
+    ],
+    hardbass: [
+        { src: './sounds/hardbass/pump_bass26.wav', label: 'Bass 1' },
+        { src: './sounds/hardbass/pump_bass27.wav', label: 'Bass 2' },
+        { src: './sounds/hardbass/pump_bass30.wav', label: 'Bass 3' },
+        { src: './sounds/hardbass/pump_bass31.wav', label: 'Bass 4' },
+        { src: './sounds/hardbass/pump_bass38.wav', label: 'Bass 5' },
+        { src: './sounds/hardbass/pump_bass142.wav', label: 'Bass 6' },
+        { src: './sounds/hardbass/pump_bass143.wav', label: 'Bass 7' },
+        { src: './sounds/hardbass/Snare_1.wav', label: 'Snare' },
+        { src: './sounds/hardbass/Closed_Hat.wav', label: 'Hi-Hat' },
+        { src: './sounds/hardbass/Clap.wav', label: 'Clap' },
+        { src: './sounds/hardbass/FX.wav', label: 'FX' }
+    ],
+    phonk: [
+        { src: './sounds/phonk/Captain.wav', label: 'Captain' },
+        { src: './sounds/phonk/808 Clap Layer Snare.wav', label: 'Clap Snare' },
+        { src: './sounds/phonk/Everyone has this.wav', label: 'Everyone' },
+        { src: './sounds/phonk/11-Moar Cowbell.wav', label: 'Cowbell' },
+        { src: './sounds/phonk/Legendary Tambourine 1.mp3', label: 'Tambourine' },
+        { src: './sounds/phonk/Rack Kick1.wav', label: 'Kick' },
+        { src: './sounds/phonk/MetroBoominHat.wav', label: 'Hat' },
+        { src: './sounds/phonk/PIMP DEM SLUTS.wav', label: 'PIMP' },
+        { src: './sounds/phonk/Chambers Filled With Corpses.mp3', label: 'Chambers' },
+        { src: './sounds/phonk/!808 31.wav', label: '808' },
+        { src: './sounds/phonk/kick (1).wav', label: 'Kick 2' },
+        { src: './sounds/phonk/Percs (31).wav', label: 'Percs' }
+    ],
+    hiphop: [
+        { src: './sounds/hip-hop/Kick_1.wav', label: 'Kick 1' },
+        { src: './sounds/hip-hop/Kick_2.wav', label: 'Kick 2' },
+        { src: './sounds/hip-hop/Snare_1.wav', label: 'Snare 1' },
+        { src: './sounds/hip-hop/Snare_2.wav', label: 'Snare 2' },
+        { src: './sounds/hip-hop/Closed_Hat_1.wav', label: 'Closed Hat 1' },
+        { src: './sounds/hip-hop/Closed_Hat_2.wav', label: 'Closed Hat 2' },
+        { src: './sounds/hip-hop/Open_Hat.wav', label: 'Open Hat' },
+        { src: './sounds/hip-hop/Perc.wav', label: 'Perc' },
+        { src: './sounds/hip-hop/Music_Chop.wav', label: 'Music Chop' },
+        { src: './sounds/hip-hop/Trumpet_Chop.wav', label: 'Trumpet' },
+        { src: './sounds/hip-hop/Guitar_Chop.wav', label: 'Guitar' },
+        { src: './sounds/hip-hop/Are_You_Ready.wav', label: 'Are You Ready' }
+    ]
+};
+
+// Текущий набор звуков
+let currentSoundSet = 'classic';
+
 // Настройка цветов и темы для Telegram Mini App
 function setupTelegramColors() {
   try {
@@ -537,20 +599,7 @@ async function preloadAndDecodeSounds() {
             initAudioContext();
         }
 
-        const sounds = [
-            { src: './sounds/TomM.mp3', label: 'Bass Drum' },
-            { src: './sounds/Snare01.mp3', label: 'Snare' },
-            { src: './sounds/Hat.mp3', label: 'Hi-Hat' },
-            { src: './sounds/Rim.mp3', label: 'Rim' },
-            { src: './sounds/TomF.mp3', label: 'Tom' },
-            { src: './sounds/Crash01.mp3', label: 'Crash' },
-            { src: './sounds/Hat_Open.mp3', label: 'Open Hat' },
-            { src: './sounds/Crash_02.mp3', label: 'Crash 2' },
-            { src: './sounds/Ride01.mp3', label: 'Ride' },
-            { src: './sounds/Ride02.mp3', label: 'Ride 2' },
-            { src: './sounds/TomL.mp3', label: 'Tom L' },
-            { src: './sounds/Shake.mp3', label: 'Shake' }
-        ];
+        const sounds = soundSets[currentSoundSet];
 
         for (const sound of sounds) {
             try {
@@ -619,29 +668,18 @@ function createDJPads() {
             return;
         }
         
-        if (document.querySelector('#game-section .pads-container')) {
-            console.log('Пады уже созданы');
-            return;
+        // Очищаем существующие пады
+        const existingPads = document.querySelector('#game-section .pads-container');
+        if (existingPads) {
+            existingPads.remove();
         }
         
         const padsContainer = document.createElement('div');
         padsContainer.className = 'pads-container';
         gameSection.appendChild(padsContainer);
         
-        const sounds = [
-            { src: './sounds/TomM.mp3', label: 'Bass Drum' },
-            { src: './sounds/Snare01.mp3', label: 'Snare' },
-            { src: './sounds/Hat.mp3', label: 'Hi-Hat' },
-            { src: './sounds/Rim.mp3', label: 'Rim' },
-            { src: './sounds/TomF.mp3', label: 'Tom' },
-            { src: './sounds/Crash01.mp3', label: 'Crash' },
-            { src: './sounds/Hat_Open.mp3', label: 'Open Hat' },
-            { src: './sounds/Crash_02.mp3', label: 'Crash 2' },
-            { src: './sounds/Ride01.mp3', label: 'Ride' },
-            { src: './sounds/Ride02.mp3', label: 'Ride 2' },
-            { src: './sounds/TomL.mp3', label: 'Tom L' },
-            { src: './sounds/Shake.mp3', label: 'Shake' }
-        ];
+        // Используем текущий набор звуков
+        const sounds = soundSets[currentSoundSet];
         
         sounds.forEach((sound, index) => {
             const pad = document.createElement('div');
@@ -1049,21 +1087,20 @@ function setupEventListeners() {
     document.querySelectorAll('.play-button').forEach(button => {
         button.addEventListener('click', function() {
             const songCard = this.closest('.song-card');
-            if (songCard.classList.contains('locked')) {
-                return;
-            }
+            const songName = songCard.querySelector('.song-name').textContent;
             
-            currentSong = {
-                id: songCard.dataset.songId,
-                name: songCard.querySelector('.song-name').textContent
-            };
+            // Определяем набор звуков на основе названия песни
+            let soundSet = 'classic';
+            if (songName.includes('Hardbass')) soundSet = 'hardbass';
+            else if (songName.includes('Phonk')) soundSet = 'phonk';
+            else if (songName.includes('Hip-Hop')) soundSet = 'hiphop';
+            
+            // Переключаем набор звуков
+            switchSoundSet(soundSet);
             
             // Скрываем список песен и показываем дрампад
             document.querySelector('.songs-list').style.display = 'none';
             document.querySelector('.drum-pad-section').style.display = 'block';
-            
-            // Инициализируем дрампад для выбранной песни
-            initDrumPad();
         });
     });
 }
@@ -1072,4 +1109,13 @@ function setupEventListeners() {
 function initDrumPad() {
     // Здесь будет код инициализации дрампада для выбранной песни
     console.log('Инициализация дрампада для песни:', currentSong);
+}
+
+// Функция для переключения набора звуков
+function switchSoundSet(setName) {
+    if (soundSets[setName]) {
+        currentSoundSet = setName;
+        createDJPads();
+        console.log(`Переключен набор звуков на: ${setName}`);
+    }
 }
