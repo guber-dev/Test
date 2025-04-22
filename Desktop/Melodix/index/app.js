@@ -351,47 +351,35 @@ document.addEventListener('DOMContentLoaded', function() {
         // Инициализируем аудио контекст
         initAudioContext();
         
-        // Создаем DJ-пады - самое важное
-        const padsCreated = createDJPads();
-        if (!padsCreated) {
-            console.error('Не удалось создать DJ-пады');
+        // Показываем список песен по умолчанию
+        document.querySelector('.songs-list').style.display = 'block';
+        document.querySelector('.drum-pad-section').style.display = 'none';
+        
+        // Инициализируем обработчики меню
+        try {
+            if (typeof initMenuHandlers === 'function') {
+                initMenuHandlers();
+            }
+        } catch (e) {
+            console.error('Ошибка при инициализации обработчиков меню:', e);
         }
         
-        // Добавляем дополнительные функции, только если пады созданы
-        if (padsCreated) {
-            // Создаем интерфейс записи
-            try {
-                createRecordingInterface();
-            } catch (e) {
-                console.error('Ошибка при создании интерфейса записи:', e);
+        // Загружаем данные пользователя
+        try {
+            if (typeof loadUserData === 'function') {
+                loadUserData();
             }
-            
-            // Инициализируем обработчики меню
-            try {
-                if (typeof initMenuHandlers === 'function') {
-                    initMenuHandlers();
-                }
-            } catch (e) {
-                console.error('Ошибка при инициализации обработчиков меню:', e);
+        } catch (e) {
+            console.error('Ошибка при загрузке данных пользователя:', e);
+        }
+        
+        // Показываем секцию игры по умолчанию
+        try {
+            if (typeof switchSection === 'function') {
+                switchSection('game-section');
             }
-            
-            // Загружаем данные пользователя
-            try {
-                if (typeof loadUserData === 'function') {
-                    loadUserData();
-                }
-            } catch (e) {
-                console.error('Ошибка при загрузке данных пользователя:', e);
-            }
-            
-            // Показываем секцию игры по умолчанию
-            try {
-                if (typeof switchSection === 'function') {
-                    switchSection('game-section');
-                }
-            } catch (e) {
-                console.error('Ошибка при переключении секции:', e);
-            }
+        } catch (e) {
+            console.error('Ошибка при переключении секции:', e);
         }
         
         // Предотвращаем случайное закрытие - важно для UX
@@ -406,6 +394,103 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Критическая ошибка при инициализации приложения:', error);
     }
 });
+
+// Обновляем обработчик кнопок выбора песни
+document.querySelectorAll('.play-button').forEach(button => {
+    button.addEventListener('click', function() {
+        const songCard = this.closest('.song-card');
+        const songName = songCard.querySelector('.song-name').textContent;
+        
+        // Определяем набор звуков на основе названия песни
+        let soundSet = 'classic';
+        if (songName.includes('Hardbass')) soundSet = 'hardbass';
+        else if (songName.includes('Phonk')) soundSet = 'phonk';
+        else if (songName.includes('Hip-Hop')) soundSet = 'hiphop';
+        
+        // Переключаем набор звуков
+        switchSoundSet(soundSet);
+        
+        // Скрываем список песен и показываем дрампад
+        document.querySelector('.songs-list').style.display = 'none';
+        document.querySelector('.drum-pad-section').style.display = 'block';
+        
+        // Создаем пады с новым набором звуков
+        createDJPads();
+    });
+});
+
+// Добавляем кнопку "Назад" для возврата к списку песен
+function addBackButton() {
+    const backButton = document.createElement('button');
+    backButton.className = 'back-button';
+    backButton.innerHTML = '<i class="fas fa-arrow-left"></i> Назад к песням';
+    backButton.addEventListener('click', function() {
+        document.querySelector('.songs-list').style.display = 'block';
+        document.querySelector('.drum-pad-section').style.display = 'none';
+    });
+    
+    const drumPadSection = document.querySelector('.drum-pad-section');
+    if (drumPadSection) {
+        drumPadSection.appendChild(backButton);
+    }
+}
+
+// Обновляем функцию createDJPads
+function createDJPads() {
+    try {
+        console.log('Начинаем создание DJ-падов');
+        
+        const drumPadSection = document.querySelector('.drum-pad-section');
+        if (!drumPadSection) {
+            console.error('Секция дрампада не найдена');
+            return;
+        }
+        
+        // Очищаем существующие пады
+        const existingPads = drumPadSection.querySelector('.pads-container');
+        if (existingPads) {
+            existingPads.remove();
+        }
+        
+        const padsContainer = document.createElement('div');
+        padsContainer.className = 'pads-container';
+        drumPadSection.appendChild(padsContainer);
+        
+        // Используем текущий набор звуков
+        const sounds = soundSets[currentSoundSet];
+        
+        sounds.forEach((sound, index) => {
+            const pad = document.createElement('div');
+            pad.className = 'pad';
+            pad.setAttribute('data-sound', sound.src);
+            pad.setAttribute('data-index', index);
+            
+            const label = document.createElement('div');
+            label.className = 'pad-label';
+            label.textContent = sound.label;
+            
+            pad.appendChild(label);
+            padsContainer.appendChild(pad);
+            
+            pad.addEventListener('click', () => playSound(pad));
+            pad.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                playSound(pad);
+            });
+        });
+        
+        // Добавляем кнопку "Назад"
+        addBackButton();
+        
+        // Предварительно загружаем и декодируем звуки
+        preloadAndDecodeSounds();
+        
+        return true;
+    } catch (error) {
+        console.error('Ошибка при создании DJ-падов:', error);
+        return false;
+    }
+}
 
 // Инициализация обработчиков меню
 function initMenuHandlers() {
@@ -654,60 +739,6 @@ function playSound(pad) {
         }
     } catch (error) {
         console.error('Ошибка в функции playSound:', error);
-    }
-}
-
-// Создание DJ-падов
-function createDJPads() {
-    try {
-        console.log('Начинаем создание DJ-падов');
-        
-        const gameSection = document.getElementById('game-section');
-        if (!gameSection) {
-            console.error('Секция игры #game-section не найдена');
-            return;
-        }
-        
-        // Очищаем существующие пады
-        const existingPads = document.querySelector('#game-section .pads-container');
-        if (existingPads) {
-            existingPads.remove();
-        }
-        
-        const padsContainer = document.createElement('div');
-        padsContainer.className = 'pads-container';
-        gameSection.appendChild(padsContainer);
-        
-        // Используем текущий набор звуков
-        const sounds = soundSets[currentSoundSet];
-        
-        sounds.forEach((sound, index) => {
-            const pad = document.createElement('div');
-            pad.className = 'pad';
-            pad.setAttribute('data-sound', sound.src);
-            pad.setAttribute('data-index', index);
-            
-            const label = document.createElement('div');
-            label.className = 'pad-label';
-            label.textContent = sound.label;
-            
-            pad.appendChild(label);
-            padsContainer.appendChild(pad);
-            
-            pad.addEventListener('click', () => playSound(pad));
-            pad.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                playSound(pad);
-            });
-        });
-        
-        // Предварительно загружаем и декодируем звуки
-        preloadAndDecodeSounds();
-        
-        return true;
-    } catch (error) {
-        console.error('Ошибка при создании DJ-падов:', error);
-        return false;
     }
 }
 
@@ -1079,36 +1110,6 @@ function downloadRecording() {
             window.Telegram.WebApp.showAlert('Ошибка при скачивании записи: ' + error.message);
         }
     }
-}
-
-// Обработчики событий
-function setupEventListeners() {
-    // Обработчик выбора песни
-    document.querySelectorAll('.play-button').forEach(button => {
-        button.addEventListener('click', function() {
-            const songCard = this.closest('.song-card');
-            const songName = songCard.querySelector('.song-name').textContent;
-            
-            // Определяем набор звуков на основе названия песни
-            let soundSet = 'classic';
-            if (songName.includes('Hardbass')) soundSet = 'hardbass';
-            else if (songName.includes('Phonk')) soundSet = 'phonk';
-            else if (songName.includes('Hip-Hop')) soundSet = 'hiphop';
-            
-            // Переключаем набор звуков
-            switchSoundSet(soundSet);
-            
-            // Скрываем список песен и показываем дрампад
-            document.querySelector('.songs-list').style.display = 'none';
-            document.querySelector('.drum-pad-section').style.display = 'block';
-        });
-    });
-}
-
-// Инициализация дрампада
-function initDrumPad() {
-    // Здесь будет код инициализации дрампада для выбранной песни
-    console.log('Инициализация дрампада для песни:', currentSong);
 }
 
 // Функция для переключения набора звуков

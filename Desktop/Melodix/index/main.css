@@ -900,3 +900,30 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+.back-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--tg-theme-bg-color);
+    border: 1px solid var(--tg-theme-text-color);
+    color: var(--tg-theme-text-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.back-button:hover {
+    background: var(--tg-theme-text-color);
+    color: var(--tg-theme-bg-color);
+}
+
+.back-button i {
+    font-size: 18px;
+}
