@@ -195,8 +195,6 @@ class ReferralSystem {
         if (!this.currentUser || !this.referralCode) {
             return null;
         }
-        
-        // Создаем ссылку на приложение с правильным параметром startapp
         return `https://t.me/MelodixCryptoBot/app?startapp=${this.referralCode}`;
     }
 
@@ -228,93 +226,8 @@ class ReferralSystem {
         }
     }
 
-    // Поделиться реферальной ссылкой
-    async shareReferralLink() {
-        const referralLink = this.getReferralLink();
-        
-        if (!referralLink) {
-            console.error('Не удалось получить реферальную ссылку');
-            return false;
-        }
-        
-        try {
-            // Проверка валидности реферальной ссылки
-            if (!referralLink || !referralLink.startsWith('https://t.me/')) {
-                console.error('Некорректная ссылка для шаринга:', referralLink);
-                return false;
-            }
-            // Подготавливаем сообщение через Bot API
-            const response = await fetch('https://ljeiynmocwcltbzhktqr.supabase.co/functions/v1/prepare-share-message', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'apikey': SUPABASE_ANON_KEY
-                },
-                body: JSON.stringify({
-                    user_id: this.currentUser.telegram_id,
-                    referral_link: referralLink
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Ошибка сервера: ${errorData.error || response.statusText}`);
-            }
-
-            const result = await response.json();
-            
-            if (!result.prepared_message_id) {
-                throw new Error('Не удалось подготовить сообщение');
-            }
-
-            // Открываем диалог шаринга с подготовленным сообщением через shareMessage
-            if (window.Telegram?.WebApp?.shareMessage) {
-                Telegram.WebApp.shareMessage(result.prepared_message_id, (ok) => {
-                    if (ok) {
-                        Telegram.WebApp.showAlert("Ссылка успешно отправлена!");
-                    } else {
-                        Telegram.WebApp.showAlert("Не удалось отправить ссылку");
-                    }
-                });
-                return true;
-            } else {
-                throw new Error('Telegram WebApp API недоступен или не поддерживает shareMessage');
-            }
-        } catch (error) {
-            console.error('Ошибка при шаринге ссылки:', error);
-            if (window.Telegram?.WebApp?.showAlert) {
-                window.Telegram.WebApp.showAlert(`Ошибка: ${error.message}`);
-            }
-            return false;
-        }
-    }
-
-    // Шаринг через нативный deeplink
-    async shareViaDeeplink() {
-        const referralLink = this.getReferralLink();
-        
-        if (!referralLink) {
-            console.error('Не удалось получить реферальную ссылку');
-            return false;
-        }
-
-        try {
-            const text = `🎵 Присоединяйся к Melodix DJ Pads!\n\nСоздавай биты и зарабатывай бонусы!\n\n${referralLink}`;
-            const encodedText = encodeURIComponent(text);
-            const encodedUrl = encodeURIComponent(referralLink);
-            const deeplink = `tg://msg_url?url=${encodedUrl}&text=${encodedText}`;
-            
-            window.location.href = deeplink;
-            return true;
-        } catch (error) {
-            console.error('Ошибка при создании deeplink:', error);
-            return false;
-        }
-    }
-
     // Шаринг через URL
-    async shareViaUrl() {
+    async shareReferralLink() {
         const referralLink = this.getReferralLink();
         
         if (!referralLink) {
@@ -330,6 +243,9 @@ class ReferralSystem {
             return true;
         } catch (error) {
             console.error('Ошибка при создании share URL:', error);
+            if (window.Telegram?.WebApp?.showAlert) {
+                window.Telegram.WebApp.showAlert(`Ошибка: ${error.message}`);
+            }
             return false;
         }
     }
@@ -345,46 +261,15 @@ document.addEventListener('DOMContentLoaded', async function() {
         await window.referralSystem.init();
         console.log('Реферальная система инициализирована');
         
-        // Обновляем статистику в профиле, если она доступна
+        // Обновляем статистику в профиле
         updateReferralStats();
 
-        // Инициализируем обработчики кнопок
-        // Обработчик для кнопки приглашения друзей
-        const inviteButton = document.getElementById('invite-friends-btn');
-        if (inviteButton) {
-            inviteButton.addEventListener('click', async function() {
-                if (window.referralSystem) {
-                    await window.referralSystem.shareReferralLink();
-                } else {
-                    console.error('Реферальная система не инициализирована');
-                    if (window.Telegram?.WebApp?.showAlert) {
-                        window.Telegram.WebApp.showAlert('Не удалось поделиться ссылкой. Попробуйте позже.');
-                    }
-                }
-            });
-        }
-
-        // Обработчик для кнопки шаринга через deeplink
-        const shareDeeplinkButton = document.getElementById('share-deeplink-btn');
-        if (shareDeeplinkButton) {
-            shareDeeplinkButton.addEventListener('click', async function() {
-                if (window.referralSystem) {
-                    await window.referralSystem.shareViaDeeplink();
-                } else {
-                    console.error('Реферальная система не инициализирована');
-                    if (window.Telegram?.WebApp?.showAlert) {
-                        window.Telegram.WebApp.showAlert('Не удалось создать ссылку. Попробуйте позже.');
-                    }
-                }
-            });
-        }
-
-        // Обработчик для кнопки шаринга через URL
+        // Инициализируем обработчик кнопки шаринга
         const shareUrlButton = document.getElementById('share-url-btn');
         if (shareUrlButton) {
             shareUrlButton.addEventListener('click', async function() {
                 if (window.referralSystem) {
-                    await window.referralSystem.shareViaUrl();
+                    await window.referralSystem.shareReferralLink();
                 } else {
                     console.error('Реферальная система не инициализирована');
                     if (window.Telegram?.WebApp?.showAlert) {
@@ -407,7 +292,7 @@ async function updateReferralStats() {
             pointsElement.textContent = stats.points;
         }
         
-        // Обновляем количество приглашенных друзей (если есть такой элемент)
+        // Обновляем количество приглашенных друзей
         const achievementsElement = document.querySelector('.profile-stats .stat-item:last-child .stat-value');
         if (achievementsElement) {
             achievementsElement.textContent = stats.invited;
